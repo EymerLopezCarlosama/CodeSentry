@@ -1,0 +1,1 @@
+// Encabezado de la aplicación.
