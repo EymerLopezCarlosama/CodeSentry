@@ -99,8 +99,11 @@ Contenido: total de hallazgos, distribución por severidad y por archivo, fecha 
 | POST | `/archivos/:id/pruebas` | HU-12 → `{ "framework": "jest", "contenido": "..." }` |
 
 ---
-## ⚠️ Decisiones pendientes del MER
-Este contrato asume tres ajustes que **no están** en el diccionario de datos actual. Hay que decidirlos en equipo (y avisar al profe si cambia el MER):
-1. **`Proyecto.modelo_ia`** (VARCHAR 50): HU-02 y HU-03 hablan de un modelo "configurado en el proyecto", pero hoy solo existe `Analisis.modelo_ia_usado`.
-2. **`Resultado.id_archivo`** (FK a Archivo): HU-07 pide agrupar hallazgos por archivo y hoy Resultado no sabe de qué archivo viene.
-3. **Subcarpetas:** `SolicitudRevision` solo puede apuntar a un archivo o a "la carpeta" (el proyecto completo). Si se quiere analizar una subcarpeta, falta un campo (ej. `ruta_relativa`).
+## Cambios al MER (v3)
+Este contrato asume ajustes sobre el diccionario de datos entregado. Ya están aplicados en `database/schema.sql` y en `CodeSentry_MER_v3.drawio`; falta reflejarlos en el documento Word y avisar al profe:
+1. **`Proyecto.modelo_ia`** (VARCHAR 50, NOT NULL, DEFAULT 'qwen2.5-coder') — ✅ aplicado. HU-02 y HU-03 hablan de un modelo configurado por proyecto.
+2. **`Resultado.id_archivo`** (INT, NOT NULL, FK a Archivo, ON DELETE CASCADE) — ✅ aplicado. HU-07 agrupa hallazgos por archivo.
+3. **`Archivo`: UNIQUE (id_proyecto, ruta_relativa)** — ✅ aplicado. Permite re-escanear un proyecto sin duplicar archivos ni perder resultados.
+
+## ⚠️ Decisión pendiente
+**Subcarpetas:** `SolicitudRevision` solo puede apuntar a un archivo o a "la carpeta" (el proyecto completo). Para el MVP se queda así. Si se quiere analizar una subcarpeta, falta un campo (ej. `ruta_relativa`) en `SolicitudRevision` y el contrato del analyzer ya lo soporta.

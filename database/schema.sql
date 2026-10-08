@@ -1,4 +1,5 @@
 -- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+ (XAMPP)
+-- v3: + Proyecto.modelo_ia · + Resultado.id_archivo · + UNIQUE(id_proyecto, ruta_relativa) en Archivo
 CREATE DATABASE IF NOT EXISTS codesentry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE codesentry;
 
@@ -17,6 +18,7 @@ CREATE TABLE Proyecto (
   id_proyecto         INT AUTO_INCREMENT PRIMARY KEY,
   nombre              VARCHAR(100) NOT NULL,
   ruta_carpeta        VARCHAR(255) NOT NULL UNIQUE,
+  modelo_ia           VARCHAR(50) NOT NULL DEFAULT 'qwen2.5-coder',
   fecha_registro      DATE NOT NULL DEFAULT (CURRENT_DATE),
   fecha_actualizacion DATE NULL,
   id_estado           INT NOT NULL,
@@ -38,6 +40,7 @@ CREATE TABLE Archivo (
   ruta_relativa  VARCHAR(255) NOT NULL,
   lenguaje       VARCHAR(20) NOT NULL,
   CONSTRAINT chk_archivo_lenguaje CHECK (lenguaje IN ('js','ts','py')),
+  CONSTRAINT uq_archivo_ruta UNIQUE (id_proyecto, ruta_relativa),
   FOREIGN KEY (id_proyecto) REFERENCES Proyecto(id_proyecto) ON DELETE CASCADE
 );
 
@@ -65,13 +68,15 @@ CREATE TABLE Analisis (
 CREATE TABLE Resultado (
   id_resultado INT AUTO_INCREMENT PRIMARY KEY,
   id_analisis  INT NOT NULL,
+  id_archivo   INT NOT NULL,
   tipo         VARCHAR(20) NOT NULL,
   descripcion  TEXT NOT NULL,
   severidad    VARCHAR(15) NOT NULL,
   linea_codigo INT NOT NULL,
   CONSTRAINT chk_resultado_sev CHECK (severidad IN ('baja','media','alta','critica')),
   CONSTRAINT chk_resultado_linea CHECK (linea_codigo >= 1),
-  FOREIGN KEY (id_analisis) REFERENCES Analisis(id_analisis) ON DELETE CASCADE
+  FOREIGN KEY (id_analisis) REFERENCES Analisis(id_analisis) ON DELETE CASCADE,
+  FOREIGN KEY (id_archivo)  REFERENCES Archivo(id_archivo) ON DELETE CASCADE
 );
 
 CREATE TABLE ChecklistItem (
