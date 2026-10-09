@@ -5,4 +5,4 @@
 //
 // Depende de: config/env.ts
 // Referencia: database/schema.sql
-// Hecho cuando: probarConexion() devuelve true con XAMPP/MariaDB encendido y la BD codesentry importada.
+// Hecho cuando: probarConexion() devuelve true con el contenedor Docker codesentry-db encendido (puerto 3307) y la BD codesentry creada.

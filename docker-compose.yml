@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: codesentry-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: codesentry
+    ports:
+      - "3307:3306"
+    volumes:
+      # Se ejecutan en orden alfabético, solo la primera vez que se crea el volumen
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seeds/catalogos.sql:/docker-entrypoint-initdb.d/02-catalogos.sql
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:

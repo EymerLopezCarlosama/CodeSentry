@@ -1,12 +1,14 @@
--- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+ (XAMPP)
--- v3: + Proyecto.modelo_ia · + Resultado.id_archivo · + UNIQUE(id_proyecto, ruta_relativa) en Archivo
+-- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+
+-- v5: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo
+-- Los datos semilla (Estado, Lenguaje) están en database/seeds/catalogos.sql
 CREATE DATABASE IF NOT EXISTS codesentry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE codesentry;
 
 CREATE TABLE Estado (
   id_estado       INT AUTO_INCREMENT PRIMARY KEY,
   nombre_estado   VARCHAR(30) NOT NULL,
-  contexto_modulo VARCHAR(30) NOT NULL
+  contexto_modulo VARCHAR(30) NOT NULL,
+  CONSTRAINT uq_estado UNIQUE (nombre_estado, contexto_modulo)
 );
 
 CREATE TABLE Lenguaje (
@@ -52,7 +54,7 @@ CREATE TABLE SolicitudRevision (
   fecha_solicitud DATE NOT NULL DEFAULT (CURRENT_DATE),
   CONSTRAINT chk_solicitud_tipo CHECK (tipo_objetivo IN ('carpeta','archivo')),
   FOREIGN KEY (id_proyecto) REFERENCES Proyecto(id_proyecto) ON DELETE CASCADE,
-  FOREIGN KEY (id_archivo)  REFERENCES Archivo(id_archivo)
+  FOREIGN KEY (id_archivo)  REFERENCES Archivo(id_archivo) ON DELETE CASCADE
 );
 
 CREATE TABLE Analisis (
