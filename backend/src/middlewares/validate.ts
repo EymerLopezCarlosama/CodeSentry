@@ -1,5 +1,15 @@
-// PROMPT — middlewares/validate.ts
-//
-// Exportar `validate({ body?, params?, query? })`: recibe esquemas zod, parsea cada parte de la petición y reemplaza req.body/params/query por los datos ya parseados y convertidos (ej. id string → number).
-// Si falla, llamar next(error) para que error-handler responda 400 DATOS_INVALIDOS.
-// Hecho cuando: las rutas lo usan así: router.post("/", validate({ body: crearProyectoSchema }), controller.crear).
+import { NextFunction, Request, Response } from "express";
+import { ZodTypeAny } from "zod";
+
+interface Esquemas { body?: ZodTypeAny; params?: ZodTypeAny; query?: ZodTypeAny }
+
+export const validate = (esquemas: Esquemas) => (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    if (esquemas.body) req.body = esquemas.body.parse(req.body);
+    if (esquemas.params) req.params = esquemas.params.parse(req.params);
+    if (esquemas.query) req.query = esquemas.query.parse(req.query);
+    next();
+  } catch (e) {
+    next(e);
+  }
+};

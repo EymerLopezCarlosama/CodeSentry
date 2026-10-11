@@ -1,6 +1,18 @@
-// PROMPT — routes/index.ts
-//
-// Router raíz (montado en /api). Montar los routers de proyectos, revisiones, analisis, resultados, checklist, reportes y dashboard.
-// Definir aquí las utilidades: GET /salud → { backend, base_datos, analyzer, ollama } (cada uno "ok" o "error"; usa probarConexion y analyzer-client.salud) y GET /modelos → modelos de Ollama (analyzer-client.modelos).
-// Referencia: docs/api-contract.md (secciones "Utilidades")
-// Hecho cuando: /api/salud muestra el estado real de los cuatro componentes aunque alguno esté apagado.
+import { Router } from "express";
+import { probarConexion } from "../config/database";
+
+const router = Router();
+
+router.get("/salud", async (_req, res) => {
+  const bd = await probarConexion();
+  res.json({
+    backend: "ok",
+    base_datos: bd ? "ok" : "error",
+    analyzer: "error", // se conecta con analyzer-client en HU-06
+    ollama: "error",
+  });
+});
+
+// router.use("/proyectos", proyectosRoutes);  <- Jhon y Pao agregan los suyos aquí
+
+export default router;

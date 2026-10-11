@@ -1,7 +1,12 @@
-// PROMPT — app.ts
-//
-// Exportar `app` (Express) SIN llamar a listen (así se puede probar con supertest).
-// Orden: cors({ origin: "http://localhost:5173" }) → express.json() → app.use("/api", routes) → notFound → errorHandler.
-//
-// Depende de: routes/index.ts, middlewares/not-found.ts, middlewares/error-handler.ts
-// Hecho cuando: GET http://localhost:3001/api/salud responde JSON.
+import cors from "cors";
+import express from "express";
+import routes from "./routes";
+import { notFound } from "./middlewares/not-found";
+import { errorHandler } from "./middlewares/error-handler";
+
+export const app = express();
+app.use(cors({ origin: "http://localhost:5173" }));
+app.use(express.json());
+app.use("/api", routes);
+app.use(notFound);
+app.use(errorHandler);

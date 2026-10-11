@@ -1,4 +1,3 @@
-// backend/src/config/database.ts
 import mysql from "mysql2/promise";
 import { env } from "./env";
 
@@ -16,8 +15,7 @@ export async function probarConexion(): Promise<boolean> {
   try {
     await pool.query("SELECT 1");
     return true;
-  } catch (error) {
-    console.error("❌ Error de conexión a MySQL:", error);
+  } catch {
     return false;
   }
 }

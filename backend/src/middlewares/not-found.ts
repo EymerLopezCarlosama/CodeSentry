@@ -1,3 +1,6 @@
-// PROMPT — middlewares/not-found.ts
-//
-// Responder 404 con { error: { codigo: "RUTA_NO_ENCONTRADA", mensaje } } para cualquier ruta no definida. Se registra después de las rutas en app.ts.
+import { Request, Response } from "express";
+
+export const notFound = (req: Request, res: Response) =>
+  res.status(404).json({
+    error: { codigo: "RUTA_NO_ENCONTRADA", mensaje: `No existe ${req.method} ${req.originalUrl}` },
+  });

@@ -1,7 +1,25 @@
-// PROMPT — middlewares/error-handler.ts
-//
-// 1) Definir y exportar la clase `AppError extends Error` con (status, codigo, mensaje).
-// 2) Middleware de 4 parámetros (err, req, res, next) que responde SIEMPRE el formato estándar: { error: { codigo, mensaje } }.
-// Mapeo: AppError → su status/codigo · ZodError → 400 DATOS_INVALIDOS (mensaje con el primer problema) · error de mysql2 ER_DUP_ENTRY → 409 · cualquier otro → 500 ERROR_INTERNO (sin exponer el stack al cliente; registrarlo con logger.error).
-// Referencia: docs/api-contract.md (sección "Error estándar")
-// Hecho cuando: un throw new AppError(409,"RUTA_DUPLICADA","...") dentro de un service llega al cliente como 409 con ese JSON.
+import { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
+import { logger } from "../utils/logger";
+
+export class AppError extends Error {
+  constructor(public status: number, public codigo: string, mensaje: string) {
+    super(mensaje);
+  }
+}
+
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
+  if (err instanceof AppError) {
+    return res.status(err.status).json({ error: { codigo: err.codigo, mensaje: err.message } });
+  }
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      error: { codigo: "DATOS_INVALIDOS", mensaje: err.issues[0]?.message ?? "Datos inválidos." },
+    });
+  }
+  if ((err as { code?: string })?.code === "ER_DUP_ENTRY") {
+    return res.status(409).json({ error: { codigo: "REGISTRO_DUPLICADO", mensaje: "El registro ya existe." } });
+  }
+  logger.error(err);
+  return res.status(500).json({ error: { codigo: "ERROR_INTERNO", mensaje: "Error interno del servidor." } });
+}
