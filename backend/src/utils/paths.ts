@@ -1,8 +1,23 @@
-// PROMPT — utils/paths.ts
-//
-// Utilidades de rutas del sistema de archivos local (solo lectura, nunca modifican nada):
-// - existeCarpeta(ruta): Promise<boolean> (fs.promises.stat + isDirectory).
-// - normalizarRuta(ruta): path.resolve y sin separador final (en Windows, "D:\\Proyectos\\mi-api").
-// - rutaRelativa(base, archivo): relativa a la base y SIEMPRE con "/" (para guardar en Archivo.ruta_relativa).
-// - estaDentroDe(base, destino): evita que una ruta relativa salga de la carpeta del proyecto (path traversal).
-// Hecho cuando: las usan proyectos.service y scanner.service.
+import fs from "fs";
+import path from "path";
+
+export async function existeCarpeta(ruta: string): Promise<boolean> {
+  try {
+    return (await fs.promises.stat(ruta)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+export function normalizarRuta(ruta: string): string {
+  return path.resolve(ruta);
+}
+
+export function rutaRelativa(base: string, archivo: string): string {
+  return path.relative(base, archivo).split(path.sep).join("/");
+}
+
+export function estaDentroDe(base: string, destino: string): boolean {
+  const rel = path.relative(path.resolve(base), path.resolve(destino));
+  return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+}
