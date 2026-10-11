@@ -33,5 +33,6 @@ Node.js 20+, Python 3.11+, Docker Desktop (con WSL 2 en Windows) y Ollama con el
 **Conexión a la BD:** `localhost:3307`, usuario `root`, contraseña `root`, base `codesentry`.
 
 ## Flujo de ramas
-`main` (estable) ← `develop` ← `feature/hu-XX-descripcion`
+`main` (estable) ← `feature/hu-XX-descripcion`
+Cada HU se trabaja en su propia rama y entra a `main` mediante Pull Request (nadie sube directo a `main`).
 Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
