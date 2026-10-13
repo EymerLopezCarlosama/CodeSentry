@@ -1,11 +1,36 @@
-// PROMPT — proyectos.service.ts — Lógica de negocio de proyectos (HU-01 a HU-04)
-//
-// crear: normalizar ruta → si no existe 400 RUTA_INEXISTENTE → si ya está registrada 409 RUTA_DUPLICADA → estado inicial "activo" → modelo_ia por defecto "qwen2.5-coder" si no viene.
-// actualizar: cualquier campo del contrato; si cambia la ruta repetir las dos validaciones; poner fecha_actualizacion = hoy.
-// eliminar: SOLO el registro en BD (cascada a solicitudes). Nunca tocar archivos del disco. obtener inexistente → 404.
-// Devolver la forma del contrato: lenguajes como lista de nombres, estado como nombre_estado.
-//
-// Aquí viven las reglas. Errores: lanzar AppError(status, codigo, mensaje) con los códigos del contrato (error-handler.ts los convierte al JSON estándar).
-//
-// Depende de: repositories del mismo dominio, middlewares/error-handler.ts (AppError)
-// Referencia: docs/api-contract.md (sección "Proyectos") · tablas: Proyecto, Proyecto_Lenguaje, Lenguaje, Estado
+import { ProyectoRespuesta } from "../types";
+import { ActualizarProyectoDatos, CrearProyectoDatos } from "../validators/proyectos.validator";
+
+function pendiente(funcion: string): never {
+  throw new Error(`proyectos.service.${funcion}: pendiente de implementar`);
+}
+
+// HU02 (Jhon)
+export async function listar(): Promise<ProyectoRespuesta[]> {
+  return pendiente("listar");
+}
+
+// HU02 (Jhon): inexistente → AppError(404, "PROYECTO_NO_ENCONTRADO", ...)
+export async function obtener(id: number): Promise<ProyectoRespuesta> {
+  return pendiente("obtener");
+}
+
+// HU01 (Jhon): normalizar ruta → 400 RUTA_INEXISTENTE → 409 RUTA_DUPLICADA
+// → modelo por defecto → estado "activo" → insertar → devolver con obtener
+export async function crear(datos: CrearProyectoDatos): Promise<ProyectoRespuesta> {
+  return pendiente("crear");
+}
+
+// HU03 (Pao): reutiliza la validación de ruta de crear, ignora el propio proyecto
+// al buscar duplicados, 404 si no existe
+export async function actualizar(
+  id: number,
+  datos: ActualizarProyectoDatos
+): Promise<ProyectoRespuesta> {
+  return pendiente("actualizar");
+}
+
+// HU04 (Pao): 0 filas → 404. Solo BD, nunca fs.
+export async function eliminar(id: number): Promise<void> {
+  return pendiente("eliminar");
+}

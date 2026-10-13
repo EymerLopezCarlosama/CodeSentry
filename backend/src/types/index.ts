@@ -1,3 +1,4 @@
+// ── Uniones literales (iguales a los CHECK de la BD y al contrato) ──
 export type Severidad = "baja" | "media" | "alta" | "critica";
 export type TipoHallazgo = "vulnerabilidad" | "mala_practica" | "refactorizacion";
 export type CodigoLenguaje = "js" | "ts" | "py";
@@ -5,10 +6,19 @@ export type NombreLenguaje = "JavaScript" | "TypeScript" | "Python";
 export type EstadoAnalisis = "pendiente" | "en_proceso" | "completado" | "fallido";
 export type EstadoChecklist = "pendiente" | "aceptada" | "rechazada";
 export type FormatoReporte = "pdf" | "html" | "json";
+export type TipoObjetivo = "carpeta" | "archivo";
 
-// ---- Filas de la BD ----
-export interface Estado { id_estado: number; nombre_estado: string; contexto_modulo: string }
-export interface Lenguaje { id_lenguaje: number; nombre: NombreLenguaje }
+// ── Filas de la BD (fechas como "YYYY-MM-DD" por dateStrings) ──
+export interface Estado {
+  id_estado: number;
+  nombre_estado: string;
+  contexto_modulo: string;
+}
+
+export interface Lenguaje {
+  id_lenguaje: number;
+  nombre: NombreLenguaje;
+}
 
 export interface Proyecto {
   id_proyecto: number;
@@ -31,7 +41,7 @@ export interface Archivo {
 export interface SolicitudRevision {
   id_solicitud: number;
   id_proyecto: number;
-  tipo_objetivo: "carpeta" | "archivo";
+  tipo_objetivo: TipoObjetivo;
   id_archivo: number | null;
   fecha_solicitud: string;
 }
@@ -69,7 +79,7 @@ export interface Reporte {
   ruta_archivo: string;
 }
 
-// ---- Respuestas de la API (según docs/api-contract.md) ----
+// ── Respuestas de la API (según docs/api-contract.md) ──
 export interface ProyectoRespuesta {
   id_proyecto: number;
   nombre: string;
@@ -81,15 +91,20 @@ export interface ProyectoRespuesta {
   estado: string;
 }
 
+export interface Progreso {
+  procesados: number;
+  total: number;
+}
+
 export interface AnalisisRespuesta {
   id_analisis: number;
   estado: EstadoAnalisis;
   modelo_ia_usado: string;
   fecha_analisis: string;
-  progreso: { procesados: number; total: number };
+  progreso: Progreso;
 }
 
-export interface HallazgoRespuesta {
+export interface Hallazgo {
   id_resultado: number;
   tipo: TipoHallazgo;
   severidad: Severidad;
@@ -100,7 +115,7 @@ export interface HallazgoRespuesta {
 
 export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
-  archivos: { ruta_relativa: string; hallazgos: HallazgoRespuesta[] }[];
+  archivos: { ruta_relativa: string; hallazgos: Hallazgo[] }[];
 }
 
 export interface DashboardRespuesta {
@@ -114,4 +129,9 @@ export interface DashboardRespuesta {
     aceptadas: number;
     rechazadas: number;
   }[];
+}
+
+export interface ProyectoDetalle extends Proyecto {
+  estado: string;
+  lenguajes: NombreLenguaje[];
 }
