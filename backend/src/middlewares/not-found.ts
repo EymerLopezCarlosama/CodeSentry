@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 
-export const notFound = (req: Request, res: Response) =>
+export function notFound(req: Request, res: Response): void {
   res.status(404).json({
-    error: { codigo: "RUTA_NO_ENCONTRADA", mensaje: `No existe ${req.method} ${req.originalUrl}` },
+    error: {
+      codigo: "RUTA_NO_ENCONTRADA",
+      mensaje: `La ruta ${req.method} ${req.originalUrl} no existe.`,
+    },
   });
+}

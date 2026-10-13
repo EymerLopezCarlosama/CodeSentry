@@ -1,4 +1,23 @@
-// PROMPT — components/common/Button.tsx
-//
-// Botón reutilizable. Props: children, onClick, variante ("primario"|"secundario"|"peligro"), disabled, type.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
+import type { ReactNode } from "react";
+
+interface ButtonProps {
+  children: ReactNode;
+  onClick?: () => void;
+  variante?: "primario" | "secundario" | "peligro";
+  disabled?: boolean;
+  type?: "button" | "submit";
+}
+
+export default function Button({
+  children,
+  onClick,
+  variante = "primario",
+  disabled = false,
+  type = "button",
+}: ButtonProps) {
+  return (
+    <button type={type} className={`btn btn-${variante}`} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}

@@ -1,6 +1,280 @@
-/*
- PROMPT — index.css
- 
- Estilos globales sin librerías: variables CSS (colores, espaciado), reset básico, layout en grilla (sidebar + contenido), estilos base de botón, tabla, tarjeta y modal.
- Colores de severidad como variables: baja (verde), media (amarillo), alta (naranja), crítica (rojo).
-*/
+/* Estilos globales de CodeSentry (sin librerías) */
+
+:root {
+  /* Colores base */
+  --color-fondo: #f4f6f8;
+  --color-superficie: #ffffff;
+  --color-texto: #1f2933;
+  --color-texto-suave: #6b7785;
+  --color-borde: #d9dee3;
+  --color-primario: #2563eb;
+  --color-primario-oscuro: #1d4ed8;
+  --color-peligro: #dc2626;
+  --color-peligro-oscuro: #b91c1c;
+
+  /* Severidad: baja (verde), media (amarillo), alta (naranja), crítica (rojo) */
+  --sev-baja: #16a34a;
+  --sev-media: #eab308;
+  --sev-alta: #f97316;
+  --sev-critica: #dc2626;
+
+  /* Espaciado y forma */
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 16px;
+  --espacio-4: 24px;
+  --espacio-5: 32px;
+  --radio: 8px;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --ancho-sidebar: 220px;
+}
+
+/* Reset básico */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  margin: 0 0 var(--espacio-3);
+}
+
+/* Layout: encabezado arriba, sidebar a la izquierda, contenido a la derecha */
+.app {
+  display: grid;
+  grid-template-columns: var(--ancho-sidebar) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar contenido";
+  min-height: 100vh;
+}
+
+.app-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espacio-3) var(--espacio-4);
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.app-sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  padding: var(--espacio-3);
+  background: var(--color-superficie);
+  border-right: 1px solid var(--color-borde);
+}
+
+.app-sidebar a {
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.app-sidebar a:hover {
+  background: var(--color-fondo);
+}
+
+/* NavLink agrega la clase "active" a la ruta actual */
+.app-sidebar a.active {
+  background: var(--color-primario);
+  color: #ffffff;
+}
+
+.app-contenido {
+  grid-area: contenido;
+  padding: var(--espacio-4);
+  min-width: 0;
+}
+
+/* Botones */
+.btn {
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid transparent;
+  border-radius: var(--radio);
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primario {
+  background: var(--color-primario);
+  color: #ffffff;
+}
+
+.btn-primario:hover:not(:disabled) {
+  background: var(--color-primario-oscuro);
+}
+
+.btn-secundario {
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  border-color: var(--color-borde);
+}
+
+.btn-secundario:hover:not(:disabled) {
+  background: var(--color-fondo);
+}
+
+.btn-peligro {
+  background: var(--color-peligro);
+  color: #ffffff;
+}
+
+.btn-peligro:hover:not(:disabled) {
+  background: var(--color-peligro-oscuro);
+}
+
+/* Tabla */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.tabla th,
+.tabla td {
+  padding: var(--espacio-2) var(--espacio-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla th {
+  color: var(--color-texto-suave);
+  font-weight: 600;
+}
+
+/* Tarjeta */
+.tarjeta {
+  padding: var(--espacio-4);
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+/* Modal */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+.modal {
+  width: min(480px, 90vw);
+  padding: var(--espacio-4);
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-2);
+  margin-top: var(--espacio-4);
+}
+
+/* Etiqueta de severidad (la usará SeveridadBadge) */
+.badge {
+  display: inline-block;
+  padding: 2px var(--espacio-2);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-baja { background: var(--sev-baja); }
+.badge-media { background: var(--sev-media); color: #1f2933; }
+.badge-alta { background: var(--sev-alta); }
+.badge-critica { background: var(--sev-critica); }
+
+/* Loader */
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-4);
+  color: var(--color-texto-suave);
+}
+
+.loader-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--color-borde);
+  border-top-color: var(--color-primario);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Vista vacía */
+.empty-state {
+  text-align: center;
+  padding: var(--espacio-5);
+}
+
+.empty-state p {
+  margin: 0 0 var(--espacio-3);
+  color: var(--color-texto-suave);
+}
+
+/* Indicador de estado de la plataforma (Header) */
+.estado-plataforma {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
+.estado-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+}
+
+.estado-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.estado-punto.ok {
+  background: var(--sev-baja);
+}
+
+.estado-punto.error {
+  background: var(--color-peligro);
+}

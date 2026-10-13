@@ -1,15 +1,17 @@
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 
 export async function existeCarpeta(ruta: string): Promise<boolean> {
   try {
-    return (await fs.promises.stat(ruta)).isDirectory();
+    const info = await fs.stat(ruta);
+    return info.isDirectory();
   } catch {
     return false;
   }
 }
 
 export function normalizarRuta(ruta: string): string {
+  // path.resolve vuelve la ruta absoluta y quita el separador final
   return path.resolve(ruta);
 }
 
@@ -19,5 +21,7 @@ export function rutaRelativa(base: string, archivo: string): string {
 
 export function estaDentroDe(base: string, destino: string): boolean {
   const rel = path.relative(path.resolve(base), path.resolve(destino));
-  return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+  if (rel === "") return true;
+  if (rel === ".." || rel.startsWith(".." + path.sep)) return false;
+  return !path.isAbsolute(rel);
 }

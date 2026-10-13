@@ -34,5 +34,5 @@ Node.js 20+, Python 3.11+, Docker Desktop (con WSL 2 en Windows) y Ollama con el
 
 ## Flujo de ramas
 `main` (estable) ← `feature/hu-XX-descripcion`
-Cada HU se trabaja en su propia rama y entra a `main` mediante Pull Request (nadie sube directo a `main`).
+Cada rama entra a `main` solo por Pull Request, revisado por otro compañero. No hay rama `develop`.
 Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`

@@ -1,9 +1,24 @@
-// PROMPT — proyectos.routes.ts — Rutas HTTP de proyectos (HU-01 a HU-04)
-//
-// Router de /proyectos con: GET / · GET /:id · POST / · PUT /:id · DELETE /:id · GET /:id/archivos.
-// Cada ruta: validate(...) → controller. Exportar el router (se monta en routes/index.ts).
-//
-// Solo define rutas: sin lógica ni SQL.
-//
-// Depende de: validators + controllers del mismo dominio, middlewares/validate.ts
-// Referencia: docs/api-contract.md (sección "Proyectos") · tablas: Proyecto, Proyecto_Lenguaje, Lenguaje, Estado
+import { Router } from "express";
+import * as controller from "../controllers/proyectos.controller";
+import { validate } from "../middlewares/validate";
+import {
+  actualizarProyectoSchema,
+  crearProyectoSchema,
+  idParamSchema,
+} from "../validators/proyectos.validator";
+
+export const proyectosRouter = Router();
+
+proyectosRouter.get("/", controller.listar);
+
+proyectosRouter.get("/:id", validate({ params: idParamSchema }), controller.obtener);
+
+proyectosRouter.post("/", validate({ body: crearProyectoSchema }), controller.crear);
+
+proyectosRouter.put(
+  "/:id",
+  validate({ params: idParamSchema, body: actualizarProyectoSchema }),
+  controller.actualizar
+);
+
+proyectosRouter.delete("/:id", validate({ params: idParamSchema }), controller.eliminar);

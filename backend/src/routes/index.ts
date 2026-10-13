@@ -1,18 +1,15 @@
 import { Router } from "express";
 import { probarConexion } from "../config/database";
+import { proyectosRouter } from "./proyectos.routes";
 
-const router = Router();
+export const routes = Router();
 
-router.get("/salud", async (_req, res) => {
-  const bd = await probarConexion();
+routes.get("/salud", async (_req, res) => {
+  const baseDatos = await probarConexion();
   res.json({
     backend: "ok",
-    base_datos: bd ? "ok" : "error",
-    analyzer: "error", // se conecta con analyzer-client en HU-06
-    ollama: "error",
+    base_datos: baseDatos ? "ok" : "error",
   });
 });
 
-// router.use("/proyectos", proyectosRoutes);  <- Jhon y Pao agregan los suyos aquí
-
-export default router;
+routes.use("/proyectos", proyectosRouter);

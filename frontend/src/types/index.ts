@@ -1,4 +1,45 @@
-// PROMPT — types/index.ts
-//
-// Espejo de las respuestas del contrato de la API (el frontend NO importa nada del backend): Severidad, EstadoAnalisis, EstadoChecklist, FormatoReporte, Proyecto (con modelo_ia y lenguajes), ArchivoProyecto, RespuestaRevision, Analisis (con progreso), ResultadosAgrupados / Hallazgo, ItemChecklist, Reporte, Dashboard, ErrorApi.
-// Referencia: docs/api-contract.md
+export { ErrorApi } from "../services/api";
+
+export type Severidad = "baja" | "media" | "alta" | "critica";
+export type EstadoChecklist = "pendiente" | "aceptada" | "rechazada";
+export type NombreLenguaje = "JavaScript" | "TypeScript" | "Python";
+
+// Espejo de ProyectoRespuesta del backend (docs/api-contract.md)
+export interface Proyecto {
+  id_proyecto: number;
+  nombre: string;
+  ruta_carpeta: string;
+  modelo_ia: string;
+  lenguajes: NombreLenguaje[];
+  fecha_registro: string;
+  fecha_actualizacion: string | null;
+  estado: string;
+}
+
+// Cuerpo de POST /proyectos
+export interface DatosNuevoProyecto {
+  nombre: string;
+  ruta_carpeta: string;
+  lenguajes: NombreLenguaje[];
+  modelo_ia?: string;
+}
+
+// Cuerpo de PUT /proyectos/:id (cualquiera de los campos)
+export type DatosActualizarProyecto = Partial<DatosNuevoProyecto>;
+
+// Espejo de DashboardRespuesta del backend
+export interface Dashboard {
+  totales: { proyectos: number; analisis: number; hallazgos: number };
+  por_severidad: Record<Severidad, number>;
+  checklist: Record<EstadoChecklist, number>;
+  por_proyecto: {
+    id_proyecto: number;
+    nombre: string;
+    hallazgos: number;
+    aceptadas: number;
+    rechazadas: number;
+  }[];
+}
+
+// Respuesta de GET /salud (hoy trae backend y base_datos; analyzer y ollama llegan con HU06)
+export type Salud = Record<string, string>;
