@@ -6,3 +6,22 @@
 //
 // Depende de: config/database.ts (pool), types/index.ts
 // Referencia: docs/api-contract.md (sección "Dashboard") · tablas: Proyecto, Analisis, Resultado, ChecklistItem
+
+import { RowDataPacket } from "mysql2";
+import { pool } from "../config/database";
+import { DashboardRespuesta } from "../types";
+
+export async function contarTotales(): Promise<DashboardRespuesta["totales"]> {
+  const [filas] = await pool.query<RowDataPacket[]>(
+    `SELECT
+        (SELECT COUNT(*) FROM Proyecto)  AS proyectos,
+        (SELECT COUNT(*) FROM Analisis)  AS analisis,
+        (SELECT COUNT(*) FROM Resultado) AS hallazgos`,
+  );
+  const fila = filas[0];
+  return {
+    proyectos: Number(fila.proyectos),
+    analisis: Number(fila.analisis),
+    hallazgos: Number(fila.hallazgos),
+  };
+}
