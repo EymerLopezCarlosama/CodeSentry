@@ -1,4 +1,12 @@
-// PROMPT — components/common/Loader.tsx
-//
-// Indicador de carga simple (spinner CSS) con texto opcional.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
+interface LoaderProps {
+  texto?: string;
+}
+
+export default function Loader({ texto = "Cargando..." }: LoaderProps) {
+  return (
+    <div className="loader" role="status">
+      <span className="loader-spinner" />
+      {texto && <span>{texto}</span>}
+    </div>
+  );
+}
