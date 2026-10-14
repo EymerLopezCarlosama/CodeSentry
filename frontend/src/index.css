@@ -304,3 +304,8 @@ h1, h2, h3 {
   color: var(--color-texto-suave);
   font-size: 0.85rem;
 }
+
+/* Contenedor de gráficos (dashboard) */
+.grafico-contenedor {
+  height: 260px;
+}
