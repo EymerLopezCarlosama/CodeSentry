@@ -1,4 +1,6 @@
 import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
+import { ResultSetHeader } from "mysql2";
+import { pool } from "../config/database";
 
 export interface DatosNuevoProyecto {
   nombre: string;
@@ -49,5 +51,9 @@ export async function actualizar(id: number, datos: DatosActualizarProyecto): Pr
 
 // HU04 (Pao): devuelve cuántas filas borró (0 = no existía).
 export async function eliminar(id: number): Promise<number> {
-  return pendiente("eliminar");
+  const [resultado] = await pool.query<ResultSetHeader>(
+    "DELETE FROM Proyecto WHERE id_proyecto = ?",
+    [id]
+  );
+  return resultado.affectedRows;
 }

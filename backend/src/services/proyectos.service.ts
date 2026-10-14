@@ -1,3 +1,5 @@
+import { AppError } from "../middlewares/error-handler";
+import * as proyectosRepository from "../repositories/proyectos.repository";
 import { ProyectoRespuesta } from "../types";
 import { ActualizarProyectoDatos, CrearProyectoDatos } from "../validators/proyectos.validator";
 
@@ -32,5 +34,8 @@ export async function actualizar(
 
 // HU04 (Pao): 0 filas → 404. Solo BD, nunca fs.
 export async function eliminar(id: number): Promise<void> {
-  return pendiente("eliminar");
+  const filasBorradas = await proyectosRepository.eliminar(id);
+  if (filasBorradas === 0) {
+    throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
+  }
 }
