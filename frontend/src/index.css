@@ -309,3 +309,9 @@ h1, h2, h3 {
 .grafico-contenedor {
   height: 260px;
 }
+
+/* Texto secundario */
+.texto-suave {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
