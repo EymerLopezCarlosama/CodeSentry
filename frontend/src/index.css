@@ -315,3 +315,16 @@ h1, h2, h3 {
   margin: 0;
   color: var(--color-texto-suave);
 }
+
+/* Pantalla del dashboard */
+.graficos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.mensaje-error {
+  margin: 0;
+  color: var(--color-peligro);
+}
