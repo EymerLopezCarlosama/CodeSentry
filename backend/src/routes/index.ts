@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { probarConexion } from "../config/database";
 import { proyectosRouter } from "./proyectos.routes";
+import { dashboardRouter } from "./dashboard.routes";
 
 export const routes = Router();
 
@@ -13,3 +14,4 @@ routes.get("/salud", async (_req, res) => {
 });
 
 routes.use("/proyectos", proyectosRouter);
+routes.use("/dashboard", dashboardRouter);

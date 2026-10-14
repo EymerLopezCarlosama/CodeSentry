@@ -278,3 +278,53 @@ h1, h2, h3 {
 .estado-punto.error {
   background: var(--color-peligro);
 }
+
+/* Tarjetas KPI (dashboard) */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.kpi {
+  padding: var(--espacio-3);
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.kpi-valor {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kpi-etiqueta {
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+/* Contenedor de gráficos (dashboard) */
+.grafico-contenedor {
+  height: 260px;
+}
+
+/* Texto secundario */
+.texto-suave {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
+
+/* Pantalla del dashboard */
+.graficos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.mensaje-error {
+  margin: 0;
+  color: var(--color-peligro);
+}
