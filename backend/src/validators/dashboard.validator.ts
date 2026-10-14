@@ -6,3 +6,7 @@
 //
 // Depende de: zod (solo esquemas, sin lógica)
 // Referencia: docs/api-contract.md (sección "Dashboard") · tablas: Proyecto, Analisis, Resultado, ChecklistItem
+
+import { z } from "zod";
+
+export const dashboardQuerySchema = z.object({});

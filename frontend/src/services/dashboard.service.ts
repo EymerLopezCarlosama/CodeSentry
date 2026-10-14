@@ -5,3 +5,10 @@
 //
 // Depende de: services/api.ts, types/index.ts
 // Referencia: docs/api-contract.md (sección "Dashboard")
+
+import { api } from "./api";
+import type { Dashboard } from "../types";
+
+export function obtener(): Promise<Dashboard> {
+  return api<Dashboard>("/dashboard");
+}
