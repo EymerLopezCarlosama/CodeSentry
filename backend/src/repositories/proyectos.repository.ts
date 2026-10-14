@@ -1,3 +1,5 @@
+import { RowDataPacket } from "mysql2";
+import { pool } from "../config/database";
 import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
 
 export interface DatosNuevoProyecto {
@@ -19,13 +21,82 @@ function pendiente(funcion: string): never {
   throw new Error(`proyectos.repository.${funcion}: pendiente de implementar`);
 }
 
+interface FilaProyecto extends RowDataPacket {
+  id_proyecto: number;
+  nombre: string;
+  ruta_carpeta: string;
+  modelo_ia: string;
+  fecha_registro: string;
+  fecha_actualizacion: string | null;
+  id_estado: number;
+  estado: string;
+}
+
+interface FilaLenguaje extends RowDataPacket {
+  id_proyecto: number;
+  nombre: NombreLenguaje;
+}
+
+const SELECT_PROYECTO = `
+  SELECT p.id_proyecto, p.nombre, p.ruta_carpeta, p.modelo_ia,
+         p.fecha_registro, p.fecha_actualizacion, p.id_estado,
+         e.nombre_estado AS estado
+  FROM Proyecto p
+  JOIN Estado e ON e.id_estado = p.id_estado`;
+
+// Devuelve { id_proyecto → ["JavaScript", "Python", ...] } para los ids pedidos
+async function lenguajesPorProyecto(ids: number[]): Promise<Map<number, NombreLenguaje[]>> {
+  const mapa = new Map<number, NombreLenguaje[]>();
+  if (ids.length === 0) return mapa;
+
+  const [filas] = await pool.query<FilaLenguaje[]>(
+  `SELECT pl.id_proyecto, l.nombre
+   FROM Proyecto_Lenguaje pl
+   JOIN Lenguaje l ON l.id_lenguaje = pl.id_lenguaje
+   WHERE pl.id_proyecto IN (?)
+   ORDER BY l.id_lenguaje`,
+  [ids]
+);
+
+  for (const fila of filas) {
+    const lista = mapa.get(fila.id_proyecto) ?? [];
+    lista.push(fila.nombre);
+    mapa.set(fila.id_proyecto, lista);
+  }
+  return mapa;
+}
+
+function aDetalle(fila: FilaProyecto, lenguajes: NombreLenguaje[]): ProyectoDetalle {
+  return {
+    id_proyecto: fila.id_proyecto,
+    nombre: fila.nombre,
+    ruta_carpeta: fila.ruta_carpeta,
+    modelo_ia: fila.modelo_ia,
+    fecha_registro: fila.fecha_registro,
+    fecha_actualizacion: fila.fecha_actualizacion,
+    id_estado: fila.id_estado,
+    estado: fila.estado,
+    lenguajes,
+  };
+}
+
 // HU02 (Jhon): JOIN con Estado y lenguajes por Proyecto_Lenguaje
 export async function listar(): Promise<ProyectoDetalle[]> {
-  return pendiente("listar");
+  const [filas] = await pool.query<FilaProyecto[]>(
+    `${SELECT_PROYECTO} ORDER BY p.id_proyecto DESC`
+  );
+  const lenguajes = await lenguajesPorProyecto(filas.map((f) => f.id_proyecto));
+  return filas.map((f) => aDetalle(f, lenguajes.get(f.id_proyecto) ?? []));
 }
 
 export async function obtenerPorId(id: number): Promise<ProyectoDetalle | null> {
-  return pendiente("obtenerPorId");
+  const [filas] = await pool.query<FilaProyecto[]>(
+    `${SELECT_PROYECTO} WHERE p.id_proyecto = ?`,
+    [id]
+  );
+  if (filas.length === 0) return null;
+  const lenguajes = await lenguajesPorProyecto([id]);
+  return aDetalle(filas[0], lenguajes.get(id) ?? []);
 }
 
 // HU01 (Jhon)
