@@ -2,6 +2,7 @@ import { AppError } from "../middlewares/error-handler";
 import * as proyectosRepository from "../repositories/proyectos.repository";
 import { ProyectoDetalle, ProyectoRespuesta } from "../types";
 import { ActualizarProyectoDatos, CrearProyectoDatos } from "../validators/proyectos.validator";
+import { existeCarpeta, normalizarRuta } from "../utils/paths";
 
 function pendiente(funcion: string): never {
   throw new Error(`proyectos.service.${funcion}: pendiente de implementar`);
@@ -36,10 +37,45 @@ export async function obtener(id: number): Promise<ProyectoRespuesta> {
   return aRespuesta(proyecto);
 }
 
+const MODELO_POR_DEFECTO = "qwen2.5-coder";
+
+// Validación de ruta compartida con HU03 (Pao): normaliza, comprueba que exista
+// y que no esté registrada. `idIgnorar` evita chocar con el propio proyecto al editar.
+async function validarRuta(ruta: string, idIgnorar?: number): Promise<string> {
+  const rutaNormalizada = normalizarRuta(ruta);
+
+  if (!(await existeCarpeta(rutaNormalizada))) {
+    throw new AppError(400, "RUTA_INEXISTENTE", "La carpeta no existe en este equipo.");
+  }
+
+  const existente = await proyectosRepository.obtenerPorRuta(rutaNormalizada);
+  if (existente && existente.id_proyecto !== idIgnorar) {
+    throw new AppError(409, "RUTA_DUPLICADA", "Esa carpeta ya está registrada.");
+  }
+
+  return rutaNormalizada;
+}
+
 // HU01 (Jhon): normalizar ruta → 400 RUTA_INEXISTENTE → 409 RUTA_DUPLICADA
 // → modelo por defecto → estado "activo" → insertar → devolver con obtener
 export async function crear(datos: CrearProyectoDatos): Promise<ProyectoRespuesta> {
-  return pendiente("crear");
+  const ruta = await validarRuta(datos.ruta_carpeta);
+  const modelo = datos.modelo_ia ?? MODELO_POR_DEFECTO;
+
+  const idEstado = await proyectosRepository.obtenerIdEstado("activo", "proyecto");
+  if (idEstado === null) {
+    throw new AppError(500, "ESTADO_NO_ENCONTRADO", "No existe el estado 'activo' en la base de datos.");
+  }
+
+  const id = await proyectosRepository.insertar({
+    nombre: datos.nombre,
+    ruta_carpeta: ruta,
+    modelo_ia: modelo,
+    id_estado: idEstado,
+    lenguajes: datos.lenguajes,
+  });
+
+  return obtener(id);
 }
 
 // HU03 (Pao): reutiliza la validación de ruta de crear, ignora el propio proyecto
@@ -71,5 +107,8 @@ export async function actualizar(
 
 // HU04 (Pao): 0 filas → 404. Solo BD, nunca fs.
 export async function eliminar(id: number): Promise<void> {
-  return pendiente("eliminar");
+  const filasBorradas = await proyectosRepository.eliminar(id);
+  if (filasBorradas === 0) {
+    throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
+  }
 }
