@@ -1,4 +1,4 @@
-import { RowDataPacket } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
 import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
 import { ResultSetHeader } from "mysql2";
@@ -20,6 +20,61 @@ export interface DatosActualizarProyecto {
 
 function pendiente(funcion: string): never {
   throw new Error(`proyectos.repository.${funcion}: pendiente de implementar`);
+}
+
+// HU01 (Jhon)
+interface FilaProyectoSimple extends RowDataPacket, Proyecto {}
+
+export async function obtenerPorRuta(ruta: string): Promise<Proyecto | null> {
+  const [filas] = await pool.query<FilaProyectoSimple[]>(
+    `SELECT id_proyecto, nombre, ruta_carpeta, modelo_ia,
+            fecha_registro, fecha_actualizacion, id_estado
+     FROM Proyecto
+     WHERE ruta_carpeta = ?`,
+    [ruta]
+  );
+  return filas[0] ?? null;
+}
+
+interface FilaIdEstado extends RowDataPacket {
+  id_estado: number;
+}
+
+export async function obtenerIdEstado(nombre: string, contexto: string): Promise<number | null> {
+  const [filas] = await pool.query<FilaIdEstado[]>(
+    `SELECT id_estado FROM Estado WHERE nombre_estado = ? AND contexto_modulo = ?`,
+    [nombre, contexto]
+  );
+  return filas[0]?.id_estado ?? null;
+}
+
+// Transacción: Proyecto + Proyecto_Lenguaje. Devuelve el id nuevo.
+export async function insertar(datos: DatosNuevoProyecto): Promise<number> {
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+
+    const [resultado] = await conexion.query<ResultSetHeader>(
+      `INSERT INTO Proyecto (nombre, ruta_carpeta, modelo_ia, id_estado)
+       VALUES (?, ?, ?, ?)`,
+      [datos.nombre, datos.ruta_carpeta, datos.modelo_ia, datos.id_estado]
+    );
+    const idProyecto = resultado.insertId;
+
+    await conexion.query(
+      `INSERT INTO Proyecto_Lenguaje (id_proyecto, id_lenguaje)
+       SELECT ?, id_lenguaje FROM Lenguaje WHERE nombre IN (?)`,
+      [idProyecto, datos.lenguajes]
+    );
+
+    await conexion.commit();
+    return idProyecto;
+  } catch (err) {
+    await conexion.rollback();
+    throw err;
+  } finally {
+    conexion.release();
+  }
 }
 
 interface FilaProyecto extends RowDataPacket {
@@ -98,20 +153,6 @@ export async function obtenerPorId(id: number): Promise<ProyectoDetalle | null> 
   if (filas.length === 0) return null;
   const lenguajes = await lenguajesPorProyecto([id]);
   return aDetalle(filas[0], lenguajes.get(id) ?? []);
-}
-
-// HU01 (Jhon)
-export async function obtenerPorRuta(ruta: string): Promise<Proyecto | null> {
-  return pendiente("obtenerPorRuta");
-}
-
-export async function obtenerIdEstado(nombre: string, contexto: string): Promise<number | null> {
-  return pendiente("obtenerIdEstado");
-}
-
-// Transacción: Proyecto + Proyecto_Lenguaje. Devuelve el id nuevo.
-export async function insertar(datos: DatosNuevoProyecto): Promise<number> {
-  return pendiente("insertar");
 }
 
 // HU03 (Pao): pone fecha_actualizacion = hoy. Devuelve filas afectadas.
