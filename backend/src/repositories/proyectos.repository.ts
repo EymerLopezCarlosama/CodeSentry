@@ -1,7 +1,6 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
 import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
-import { ResultSetHeader } from "mysql2";
 
 export interface DatosNuevoProyecto {
   nombre: string;
@@ -157,7 +156,55 @@ export async function obtenerPorId(id: number): Promise<ProyectoDetalle | null> 
 
 // HU03 (Pao): pone fecha_actualizacion = hoy. Devuelve filas afectadas.
 export async function actualizar(id: number, datos: DatosActualizarProyecto): Promise<number> {
-  return pendiente("actualizar");
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+
+    // Solo se actualizan los campos que llegaron
+    const campos: string[] = [];
+    const valores: string[] = [];
+    if (datos.nombre !== undefined) {
+      campos.push("nombre = ?");
+      valores.push(datos.nombre);
+    }
+    if (datos.ruta_carpeta !== undefined) {
+      campos.push("ruta_carpeta = ?");
+      valores.push(datos.ruta_carpeta);
+    }
+    if (datos.modelo_ia !== undefined) {
+      campos.push("modelo_ia = ?");
+      valores.push(datos.modelo_ia);
+    }
+    campos.push("fecha_actualizacion = CURRENT_DATE");
+
+    const [resultado] = await conexion.query<ResultSetHeader>(
+      `UPDATE Proyecto SET ${campos.join(", ")} WHERE id_proyecto = ?`,
+      [...valores, id]
+    );
+
+    if (resultado.affectedRows === 0) {
+      await conexion.rollback();
+      return 0;
+    }
+
+    // Si llegaron lenguajes, se reemplazan los anteriores
+    if (datos.lenguajes !== undefined) {
+      await conexion.query("DELETE FROM Proyecto_Lenguaje WHERE id_proyecto = ?", [id]);
+      await conexion.query(
+        `INSERT INTO Proyecto_Lenguaje (id_proyecto, id_lenguaje)
+         SELECT ?, id_lenguaje FROM Lenguaje WHERE nombre IN (?)`,
+        [id, datos.lenguajes]
+      );
+    }
+
+    await conexion.commit();
+    return resultado.affectedRows;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
 }
 
 // HU04 (Pao): devuelve cuántas filas borró (0 = no existía).

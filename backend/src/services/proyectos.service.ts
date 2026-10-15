@@ -84,7 +84,25 @@ export async function actualizar(
   id: number,
   datos: ActualizarProyectoDatos
 ): Promise<ProyectoRespuesta> {
-  return pendiente("actualizar");
+  // 404 si no existe (antes de validar nada más)
+  const actual = await proyectosRepository.obtenerPorId(id);
+  if (!actual) {
+    throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
+  }
+
+  const cambios = { ...datos };
+
+  // Solo se valida la ruta si llegó una. Se ignora el propio proyecto.
+  if (datos.ruta_carpeta !== undefined) {
+    cambios.ruta_carpeta = await validarRuta(datos.ruta_carpeta, id);
+  }
+
+  const filas = await proyectosRepository.actualizar(id, cambios);
+  if (filas === 0) {
+    throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
+  }
+
+  return obtener(id);
 }
 
 // HU04 (Pao): 0 filas → 404. Solo BD, nunca fs.
