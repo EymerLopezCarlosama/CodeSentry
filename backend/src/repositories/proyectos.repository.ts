@@ -2,7 +2,6 @@ import { RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
 import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
 import { ResultSetHeader } from "mysql2";
-import { pool } from "../config/database";
 
 export interface DatosNuevoProyecto {
   nombre: string;
