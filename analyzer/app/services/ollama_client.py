@@ -1,3 +1,4 @@
+import json
 import httpx
 
 from app.core.config import settings
@@ -60,3 +61,25 @@ def generar(modelo: str, prompt: str, transport: httpx.BaseTransport | None = No
     if r.status_code >= 400:
         raise OllamaError(f"Ollama respondió {r.status_code}")
     return r.json().get("response", "")
+
+def descargar(modelo: str, on_progreso, transport: httpx.BaseTransport | None = None) -> None:
+    """POST /api/pull en streaming; llama on_progreso(completado, total) por cada línea con bytes."""
+    try:
+        with httpx.Client(
+            base_url=settings.OLLAMA_URL, timeout=httpx.Timeout(10, read=None), transport=transport
+        ) as c:
+            with c.stream("POST", "/api/pull", json={"model": modelo, "stream": True}) as r:
+                if r.status_code >= 400:
+                    raise OllamaError(f"Ollama respondió {r.status_code}")
+                for linea in r.iter_lines():
+                    if not linea:
+                        continue
+                    d = json.loads(linea)
+                    if "error" in d:
+                        raise OllamaError(d["error"])
+                    if "total" in d:  # las líneas de estado ("success", "verifying") no traen bytes
+                        on_progreso(d.get("completed", 0), d["total"])
+    except (httpx.ConnectError, httpx.ConnectTimeout) as e:
+        raise OllamaNoDisponibleError(str(e)) from e
+    except httpx.HTTPError as e:
+        raise OllamaError(str(e)) from e
