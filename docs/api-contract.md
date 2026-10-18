@@ -91,7 +91,9 @@ Contenido: total de hallazgos, distribución por severidad y por archivo, fecha 
 ## Utilidades
 | GET | `/salud` | `{ "backend": "ok", "base_datos": "ok", "analyzer": "ok", "ollama": "ok" }` |
 |---|---|---|
-| GET | `/modelos` | Modelos instalados en Ollama (para el selector de HU-03) |
+| GET | `/modelos` | `{ "instalados": [...], "permitidos": [...] }` (selector de HU-03) |
+| POST | `/modelos/instalar` | body `{ "modelo" }` → `202` / `200` (ya instalado), mismo cuerpo que el analyzer |
+| GET | `/modelos/instalar?modelo=...` | Estado de la descarga: `descargando` · `completado` · `fallido` |
 
 ## Extensiones opcionales
 | POST | `/archivos/:id/documentacion` | HU-11 → `{ "contenido": "..." }` |

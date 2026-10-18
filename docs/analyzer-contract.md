@@ -9,6 +9,9 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 | GET | `/modelos` | Modelos disponibles en Ollama |
 | POST | `/analisis` | Crea un trabajo de análisis → `202` `{ "job_id": "abc123" }` |
 | GET | `/analisis/{job_id}` | Estado, progreso y resultados |
+| GET | `/modelos` | Modelos instalados y permitidos |
+| POST | `/modelos/instalar` | Inicia la descarga de un modelo permitido → `202` |
+| GET | `/modelos/instalar?modelo=...` | Estado de esa descarga |
 
 ### POST /analisis (entrada)
 ```json
@@ -48,6 +51,26 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 7. **Tiempo límite:** 120 s por archivo; si se excede, va a `errores`.
 8. **Estado final:** `completado` si al menos un archivo se analizó; `fallido` si todos fallaron.
 
+## Modelos
+**GET /modelos** →
+```json
+{ "instalados": ["qwen2.5-coder:latest"], "permitidos": ["qwen2.5-coder", "llama3"] }
+```
+`permitidos` sale de `MODELOS_PERMITIDOS` (.env, separado por comas). Solo esos se pueden instalar.
+
+**POST /modelos/instalar** body `{ "modelo": "llama3" }` → `202`
+```json
+{ "modelo": "llama3", "estado": "descargando", "progreso": { "completado": 0, "total": 0 } }
+```
+Si ya está instalado → `200` con `estado: "completado"`. Si ya se está descargando → `202` con el avance actual (idempotente).
+
+**GET /modelos/instalar?modelo=llama3** →
+```json
+{ "modelo": "llama3", "estado": "descargando", "progreso": { "completado": 1200000, "total": 4700000000 } }
+```
+`estado`: `descargando` · `completado` · `fallido` (con `"motivo"`). `progreso` en bytes (viene de `/api/pull` de Ollama). Sin descarga registrada y no instalado → `404`.
+El estado de la descarga vive en memoria del analyzer (se pierde al reiniciarlo).
+
 ## Errores
 | Situación | Respuesta |
 |---|---|
@@ -55,6 +78,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 | Modelo no descargado | `400` `{ "codigo": "MODELO_NO_INSTALADO" }` |
 | `ruta_base` inexistente | `400` `{ "codigo": "RUTA_INEXISTENTE" }` |
 | `job_id` desconocido | `404` |
+| Modelo fuera de `MODELOS_PERMITIDOS` | `400` `{ "codigo": "MODELO_NO_PERMITIDO" }` |
 
 ## Qué hace el backend con esto
 Consulta `GET /analisis/{job_id}` cada 2 s, actualiza `Analisis.id_estado`, y al terminar guarda cada elemento de `resultados` en `Resultado` y crea su `ChecklistItem` en estado `pendiente`.

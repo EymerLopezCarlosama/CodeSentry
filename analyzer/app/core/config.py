@@ -21,6 +21,9 @@ class Settings:
     )
     SUPPORTED_EXTENSIONS: list[str] = field(default_factory=lambda: _lista("SUPPORTED_EXTENSIONS", ".js,.ts,.py"))
     ANALYZER_PORT: int = field(default_factory=lambda: int(os.getenv("ANALYZER_PORT", "8000")))
+    MODELOS_PERMITIDOS: list[str] = field(
+        default_factory=lambda: _lista("MODELOS_PERMITIDOS", "qwen2.5-coder,llama3")
+    )
 
     # Constantes fijas del contrato (docs/analyzer-contract.md)
     TIMEOUT_ARCHIVO: int = 120  # segundos por archivo
