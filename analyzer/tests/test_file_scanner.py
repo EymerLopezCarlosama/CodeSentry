@@ -42,4 +42,4 @@ def test_objetivo_archivo_devuelve_solo_ese(proyecto):
 def test_ruta_base_inexistente(tmp_path):
     with pytest.raises(RutaInexistenteError) as e:
         escanear(str(tmp_path / "no_existe"), "carpeta", None, LENGUAJES)
-    assert e.value.codigo == "RUTA_INEXISTENTE"
+    assert e.value.codigo == "RUTA_INEXISTENTE" and e.value.status == 400

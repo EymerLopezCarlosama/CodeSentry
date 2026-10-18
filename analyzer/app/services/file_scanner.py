@@ -11,6 +11,7 @@ class RutaInexistenteError(Exception):
     """ruta_base o archivo pedido no existe (contrato: RUTA_INEXISTENTE, 400)."""
 
     codigo = "RUTA_INEXISTENTE"
+    status = 400
 
 
 def _relativa(base: str, ruta: str) -> str:

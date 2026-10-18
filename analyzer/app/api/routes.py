@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
-from app.services import modelos, ollama_client
+from app.schemas.analisis import EntradaAnalisis, JobCreado, SalidaAnalisis
+from app.services import analyzer, modelos, ollama_client
 
 router = APIRouter()
 
@@ -21,9 +23,7 @@ def listar_modelos() -> dict:
 
 
 @router.post("/modelos/instalar", status_code=202)
-def instalar(cuerpo: dict):
-    from fastapi.responses import JSONResponse
-
+def instalar(cuerpo: dict) -> JSONResponse:
     status, body = modelos.iniciar_instalacion(str(cuerpo.get("modelo", "")))
     return JSONResponse(status_code=status, content=body)
 
@@ -31,3 +31,13 @@ def instalar(cuerpo: dict):
 @router.get("/modelos/instalar")
 def estado_instalacion(modelo: str) -> dict:
     return modelos.consultar_instalacion(modelo)
+
+
+@router.post("/analisis", status_code=202, response_model=JobCreado)
+def crear_analisis(entrada: EntradaAnalisis) -> JobCreado:
+    return JobCreado(job_id=analyzer.crear_trabajo(entrada))
+
+
+@router.get("/analisis/{job_id}", response_model=SalidaAnalisis)
+def consultar_analisis(job_id: str) -> SalidaAnalisis:
+    return analyzer.consultar(job_id)
