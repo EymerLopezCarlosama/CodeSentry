@@ -88,10 +88,18 @@ Contenido: total de hallazgos, distribución por severidad y por archivo, fecha 
   "por_proyecto": [ { "id_proyecto": 1, "nombre": "Mi API", "hallazgos": 60, "aceptadas": 15, "rechazadas": 5 } ] }
 ```
 
+## Sistema (selector de carpeta)
+| GET | /sistema/seleccionar-carpeta | Abre el diálogo nativo del sistema operativo para elegir una carpeta |
+|---|---|---|
+→ `200` `{ "ruta": "D:\\Proyectos\\mi-api" }` · `204` si el usuario cancela · `501 SELECTOR_NO_DISPONIBLE` (sistema sin soporte) · `500 SELECTOR_ERROR` (no se pudo abrir el diálogo).
+La petición queda abierta mientras el diálogo esté visible (máximo 5 minutos). Solo funciona porque backend y navegador corren en el mismo equipo.
+
 ## Utilidades
 | GET | `/salud` | `{ "backend": "ok", "base_datos": "ok", "analyzer": "ok", "ollama": "ok" }` |
 |---|---|---|
-| GET | `/modelos` | Modelos instalados en Ollama (para el selector de HU-03) |
+| GET | `/modelos` | `{ "instalados": [...], "permitidos": [...] }` (selector de HU-03) |
+| POST | `/modelos/instalar` | body `{ "modelo" }` → `202` / `200` (ya instalado), mismo cuerpo que el analyzer |
+| GET | `/modelos/instalar?modelo=...` | Estado de la descarga: `descargando` · `completado` · `fallido` |
 
 ## Extensiones opcionales
 | POST | `/archivos/:id/documentacion` | HU-11 → `{ "contenido": "..." }` |
