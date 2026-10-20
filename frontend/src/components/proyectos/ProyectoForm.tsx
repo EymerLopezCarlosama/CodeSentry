@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import Button from "../common/Button";
 import type { DatosNuevoProyecto, NombreLenguaje } from "../../types";
+import * as sistemaService from "../../services/sistema.service";
 
 const LENGUAJES: NombreLenguaje[] = ["JavaScript", "TypeScript", "Python"];
 const MODELO_POR_DEFECTO = "qwen2.5-coder";
@@ -29,6 +30,7 @@ export default function ProyectoForm({
   const [lenguajes, setLenguajes] = useState<NombreLenguaje[]>(valoresIniciales?.lenguajes ?? []);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [examinando, setExaminando] = useState(false);
 
   function alternarLenguaje(lenguaje: NombreLenguaje): void {
     setLenguajes((actuales) =>
@@ -37,6 +39,19 @@ export default function ProyectoForm({
         : [...actuales, lenguaje]
     );
   }
+
+  async function examinar(): Promise<void> {
+  setError(null);
+  setExaminando(true);
+  try {
+    const carpeta = await sistemaService.seleccionarCarpeta();
+    if (carpeta) setRuta(carpeta);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Error desconocido.");
+  } finally {
+    setExaminando(false);
+  }
+}
 
   async function manejarEnvio(evento: FormEvent<HTMLFormElement>): Promise<void> {
     evento.preventDefault();
@@ -72,15 +87,22 @@ export default function ProyectoForm({
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={100} />
       </label>
 
-      <label style={{ display: "grid", gap: "4px" }}>
-        Ruta de la carpeta
-        <input
-          value={ruta}
-          onChange={(e) => setRuta(e.target.value)}
-          placeholder="C:\Proyectos\mi-api"
-          maxLength={255}
-        />
-      </label>
+      <div style={{ display: "grid", gap: "4px" }}>
+        <label htmlFor="ruta-carpeta">Ruta de la carpeta</label>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <input
+            id="ruta-carpeta"
+            style={{ flex: 1 }}
+            value={ruta}
+            onChange={(e) => setRuta(e.target.value)}
+            placeholder="C:\Proyectos\mi-api"
+            maxLength={255}
+          />
+          <Button variante="secundario" onClick={() => void examinar()} disabled={examinando}>
+            📁 {examinando ? "Esperando..." : "Examinar"}
+          </Button>
+        </div>
+      </div>
 
       <label style={{ display: "grid", gap: "4px" }}>
         Modelo de Ollama
