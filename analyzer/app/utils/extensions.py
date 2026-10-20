@@ -1,4 +1,12 @@
-# PROMPT — utils/extensions.py
-#
-# Mapa de extensiones soportadas: {".js": "js", ".ts": "ts", ".py": "py"} y funciones lenguaje_de(ruta) → "js"|"ts"|"py"|None y es_soportado(ruta).
-# Referencia: docs/analyzer-contract.md (reglas 1)
+import os
+
+EXTENSIONES: dict[str, str] = {".js": "js", ".ts": "ts", ".py": "py"}
+
+
+def lenguaje_de(ruta: str) -> str | None:
+    """'src/app.ts' -> 'ts'; extensión no soportada -> None."""
+    return EXTENSIONES.get(os.path.splitext(ruta)[1].lower())
+
+
+def es_soportado(ruta: str) -> bool:
+    return lenguaje_de(ruta) is not None
