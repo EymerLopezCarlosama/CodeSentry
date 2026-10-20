@@ -1,8 +1,22 @@
-// PROMPT — checklist.controller.ts — Controlador de checklist (HU-09)
-//
-// listar (200) y marcar (200 + item actualizado).
-//
-// Sin SQL ni reglas de negocio: extrae params/body ya validados, llama al service y responde con el status del contrato. Errores → next(err).
-//
-// Depende de: services del mismo dominio
-// Referencia: docs/api-contract.md (sección "Checklist") · tablas: ChecklistItem, Resultado, Estado
+import { NextFunction, Request, Response } from "express";
+import * as checklistService from "../services/checklist.service";
+
+// GET /analisis/:id/checklist
+export async function listar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const items = await checklistService.listar(Number(req.params.id));
+    res.status(200).json(items);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// PATCH /checklist/:id
+export async function marcar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const item = await checklistService.marcar(Number(req.params.id), req.body.estado);
+    res.status(200).json(item);
+  } catch (err) {
+    next(err);
+  }
+}

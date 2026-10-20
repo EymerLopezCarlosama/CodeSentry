@@ -9,6 +9,7 @@ import App from "../App";
 import Dashboard from "../pages/Dashboard";
 import Proyectos from "../pages/Proyectos";
 import NuevoProyecto from "../pages/NuevoProyecto";
+import Checklist from "../pages/Checklist";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: "proyectos", element: <Proyectos /> },
       { path: "proyectos/nuevo", element: <NuevoProyecto /> },
+      { path: "analisis/:id/checklist", element: <Checklist /> },
     ],
   },
 ]);
