@@ -2,7 +2,6 @@ import { NextFunction, Request, Response, Router } from "express";
 import { z } from "zod";
 import { sistemaRouter } from "./sistema.routes";
 import { probarConexion } from "../config/database";
-import { probarConexion } from "../config/database";
 import { validate } from "../middlewares/validate";
 import * as analyzerClient from "../services/analyzer-client.service";
 import { proyectosRouter } from "./proyectos.routes";
