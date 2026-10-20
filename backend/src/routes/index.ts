@@ -7,6 +7,7 @@ import * as analyzerClient from "../services/analyzer-client.service";
 import { proyectosRouter } from "./proyectos.routes";
 import { dashboardRouter } from "./dashboard.routes";
 import { analisisRouter } from "./analisis.routes";
+import { revisionesRouter } from "./revisiones.routes";
 
 export const routes = Router();
 
@@ -66,3 +67,4 @@ routes.use("/proyectos", proyectosRouter);
 routes.use("/dashboard", dashboardRouter);
 routes.use(analisisRouter);
 routes.use("/sistema", sistemaRouter);
+routes.use("/revisiones", revisionesRouter);

@@ -1,6 +1,12 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
-import { NombreLenguaje, Proyecto, ProyectoDetalle } from "../types";
+import {
+  Archivo,
+  CodigoLenguaje,
+  NombreLenguaje,
+  Proyecto,
+  ProyectoDetalle,
+} from "../types";
 
 export interface DatosNuevoProyecto {
   nombre: string;
@@ -214,4 +220,50 @@ export async function eliminar(id: number): Promise<number> {
     [id]
   );
   return resultado.affectedRows;
+}
+
+// HU05 (Jhon): funciones de Archivo
+export interface DatosArchivo {
+  nombre_archivo: string;
+  ruta_relativa: string;
+  lenguaje: CodigoLenguaje;
+}
+
+interface FilaArchivo extends RowDataPacket, Archivo {}
+
+// UPSERT sobre (id_proyecto, ruta_relativa): el id_archivo no cambia al re-escanear.
+export async function upsertarArchivos(
+  idProyecto: number,
+  archivos: DatosArchivo[]
+): Promise<Archivo[]> {
+  if (archivos.length === 0) return [];
+
+  const filas = archivos.map((a) => [idProyecto, a.nombre_archivo, a.ruta_relativa, a.lenguaje]);
+  await pool.query(
+    `INSERT INTO Archivo (id_proyecto, nombre_archivo, ruta_relativa, lenguaje)
+     VALUES ?
+     ON DUPLICATE KEY UPDATE
+       nombre_archivo = VALUES(nombre_archivo),
+       lenguaje = VALUES(lenguaje)`,
+    [filas]
+  );
+
+  const [guardados] = await pool.query<FilaArchivo[]>(
+    `SELECT id_archivo, id_proyecto, nombre_archivo, ruta_relativa, lenguaje
+     FROM Archivo
+     WHERE id_proyecto = ? AND ruta_relativa IN (?)
+     ORDER BY ruta_relativa`,
+    [idProyecto, archivos.map((a) => a.ruta_relativa)]
+  );
+  return guardados;
+}
+
+export async function obtenerArchivoPorId(idArchivo: number): Promise<Archivo | null> {
+  const [filas] = await pool.query<FilaArchivo[]>(
+    `SELECT id_archivo, id_proyecto, nombre_archivo, ruta_relativa, lenguaje
+     FROM Archivo
+     WHERE id_archivo = ?`,
+    [idArchivo]
+  );
+  return filas[0] ?? null;
 }
