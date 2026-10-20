@@ -3,6 +3,7 @@ export { ErrorApi } from "../services/api";
 export type Severidad = "baja" | "media" | "alta" | "critica";
 export type EstadoChecklist = "pendiente" | "aceptada" | "rechazada";
 export type NombreLenguaje = "JavaScript" | "TypeScript" | "Python";
+export type TipoHallazgo = "vulnerabilidad" | "mala_practica" | "refactorizacion";
 
 // Espejo de ProyectoRespuesta del backend (docs/api-contract.md)
 export interface Proyecto {
@@ -39,6 +40,19 @@ export interface Dashboard {
     aceptadas: number;
     rechazadas: number;
   }[];
+}
+
+// Elemento del checklist (GET /analisis/:id/checklist)
+export interface ItemChecklist {
+  id_checklist: number;
+  id_resultado: number;
+  ruta_relativa: string;
+  linea_codigo: number;
+  tipo: TipoHallazgo;
+  severidad: Severidad;
+  descripcion: string;
+  estado: EstadoChecklist;
+  fecha_marcado: string | null;
 }
 
 // Respuesta de GET /salud (hoy trae backend y base_datos; analyzer y ollama llegan con HU06)
