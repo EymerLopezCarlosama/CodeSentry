@@ -5,6 +5,7 @@ import { validate } from "../middlewares/validate";
 import * as analyzerClient from "../services/analyzer-client.service";
 import { proyectosRouter } from "./proyectos.routes";
 import { dashboardRouter } from "./dashboard.routes";
+import { analisisRouter } from "./analisis.routes";
 
 export const routes = Router();
 
@@ -62,3 +63,4 @@ routes.get(
 
 routes.use("/proyectos", proyectosRouter);
 routes.use("/dashboard", dashboardRouter);
+routes.use(analisisRouter);
