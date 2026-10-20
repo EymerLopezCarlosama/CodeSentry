@@ -1,8 +1,8 @@
-// PROMPT — analisis.validator.ts — Validación de entrada (zod) de análisis (HU-06)
-//
-// idParamSchema reutilizable (id entero positivo). Este endpoint no tiene body ni query.
-//
-// Esquemas zod con mensajes en español. Se aplican con middlewares/validate.ts.
-//
-// Depende de: zod (solo esquemas, sin lógica)
-// Referencia: docs/api-contract.md (sección "Análisis") · tablas: Analisis, Resultado, ChecklistItem
+import { z } from "zod";
+
+export const idParamSchema = z.object({
+  id: z.coerce
+    .number({ invalid_type_error: "El id debe ser un número." })
+    .int("El id debe ser un entero.")
+    .positive("El id debe ser mayor que cero."),
+});
