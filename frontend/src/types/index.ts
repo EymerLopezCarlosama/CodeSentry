@@ -55,5 +55,19 @@ export interface ItemChecklist {
   fecha_marcado: string | null;
 }
 
+export interface ModelosDisponibles {
+  instalados: string[];
+  permitidos: string[];
+}
+
+export type EstadoInstalacion = "descargando" | "completado" | "fallido";
+
+export interface InstalacionModelo {
+  modelo: string;
+  estado: EstadoInstalacion;
+  progreso: { completado: number; total: number };
+  motivo?: string;
+}
+
 // Respuesta de GET /salud (hoy trae backend y base_datos; analyzer y ollama llegan con HU06)
 export type Salud = Record<string, string>;
