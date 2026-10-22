@@ -135,3 +135,20 @@ export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
   archivos: ArchivoConHallazgos[];
 }
+
+// HU08: reportes
+export type FormatoReporte = "pdf" | "html" | "json";
+
+export interface Reporte {
+  id_reporte: number;
+  id_analisis: number;
+  fecha_generacion: string;
+  formato: FormatoReporte;
+  ruta_archivo: string;
+}
+
+export interface ReporteGenerado {
+  id_reporte: number;
+  formato: FormatoReporte;
+  ruta_archivo: string;
+}

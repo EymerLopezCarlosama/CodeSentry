@@ -12,6 +12,7 @@ import NuevoProyecto from "../pages/NuevoProyecto";
 import Revision from "../pages/Revision";
 import Checklist from "../pages/Checklist";
 import Resultados from "../pages/Resultados";
+import Reporte from "../pages/Reporte";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: "proyectos/nuevo", element: <NuevoProyecto /> },
       { path: "revision", element: <Revision /> },
       { path: "analisis/:id/checklist", element: <Checklist /> },
+      { path: "analisis/:id/reporte", element: <Reporte /> },
     ],
   },
 ]);

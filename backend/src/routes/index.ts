@@ -8,6 +8,7 @@ import { proyectosRouter } from "./proyectos.routes";
 import { dashboardRouter } from "./dashboard.routes";
 import { checklistRouter } from "./checklist.routes";
 import { analisisRouter } from "./analisis.routes";
+import { reportesRouter } from "./reportes.routes";
 import { revisionesRouter } from "./revisiones.routes";
 import { resultadosRouter } from "./resultados.routes";
 
@@ -72,3 +73,4 @@ routes.use(analisisRouter);
 routes.use("/sistema", sistemaRouter);
 routes.use("/revisiones", revisionesRouter);
 routes.use(resultadosRouter);
+routes.use(reportesRouter);
