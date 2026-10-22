@@ -11,12 +11,14 @@ import Proyectos from "../pages/Proyectos";
 import NuevoProyecto from "../pages/NuevoProyecto";
 import Revision from "../pages/Revision";
 import Checklist from "../pages/Checklist";
+import Resultados from "../pages/Resultados";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
+      { path: "analisis/:id/resultados", element: <Resultados /> },
       { index: true, element: <Dashboard /> },
       { path: "proyectos", element: <Proyectos /> },
       { path: "proyectos/nuevo", element: <NuevoProyecto /> },

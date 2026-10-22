@@ -113,3 +113,25 @@ export interface Analisis {
   fecha_analisis: string;
   progreso: Progreso;
 }
+
+// HU07: resultados de un análisis (docs/api-contract.md)
+
+export interface Hallazgo {
+  id_resultado: number;
+  tipo: TipoHallazgo;
+  severidad: Severidad;
+  linea_codigo: number;
+  descripcion: string;
+  estado_checklist: EstadoChecklist;
+}
+
+export interface ArchivoConHallazgos {
+  ruta_relativa: string;
+  hallazgos: Hallazgo[];
+}
+
+// Respuesta de GET /analisis/:id/resultados
+export interface ResultadosAgrupados {
+  estado: EstadoAnalisis;
+  archivos: ArchivoConHallazgos[];
+}
