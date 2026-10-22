@@ -65,6 +65,7 @@ Errores: `400 DATOS_INVALIDOS` (cuerpo mal formado, o `id_archivo` ausente/sobra
       "linea_codigo": 42, "descripcion": "...", "estado_checklist": "pendiente" } ] } ] }
 ```
 Hallazgos ordenados por severidad (critica → baja). Si el análisis no terminó: `archivos: []` y el `estado` real, no un error.
+Errores: `404 ANALISIS_NO_ENCONTRADO` · `400 DATOS_INVALIDOS` (id no numérico, o `severidad` fuera de baja/media/alta/critica).
 
 ## Checklist (HU-09)
 | GET | `/analisis/:id/checklist` | Items con código afectado, recomendación y estado |
