@@ -6,6 +6,7 @@ import { validate } from "../middlewares/validate";
 import * as analyzerClient from "../services/analyzer-client.service";
 import { proyectosRouter } from "./proyectos.routes";
 import { dashboardRouter } from "./dashboard.routes";
+import { checklistRouter } from "./checklist.routes";
 import { analisisRouter } from "./analisis.routes";
 import { revisionesRouter } from "./revisiones.routes";
 
@@ -65,6 +66,7 @@ routes.get(
 
 routes.use("/proyectos", proyectosRouter);
 routes.use("/dashboard", dashboardRouter);
+routes.use(checklistRouter);
 routes.use(analisisRouter);
 routes.use("/sistema", sistemaRouter);
 routes.use("/revisiones", revisionesRouter);
