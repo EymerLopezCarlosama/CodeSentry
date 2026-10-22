@@ -7,9 +7,11 @@ import ProyectoForm from "../components/proyectos/ProyectoForm"; // HU03
 import ProyectoList from "../components/proyectos/ProyectoList";
 import { useProyectos } from "../hooks/useProyectos";
 import type { DatosNuevoProyecto, Proyecto } from "../types"; // HU04 + HU03
+import { useNavigate } from "react-router-dom";
 
 export default function Proyectos() {
   const { proyectos, cargando, error, recargar, eliminar, actualizar } = useProyectos(); // HU04 + HU03
+  const navigate = useNavigate();
 
   // HU04: proyecto pendiente de confirmar (null = modal cerrado)
   const [aEliminar, setAEliminar] = useState<Proyecto | null>(null);
@@ -78,7 +80,7 @@ export default function Proyectos() {
       {!cargando && !error && proyectos.length === 0 && <EmptyState />}
 
       {!cargando && !error && proyectos.length > 0 && (
-        <ProyectoList proyectos={proyectos} onEditar={setAEditar} onEliminar={setAEliminar} />
+        <ProyectoList proyectos={proyectos} onEditar={setAEditar} onEliminar={setAEliminar} onRevisar={(proyecto) => navigate(`/revision?proyecto=${proyecto.id_proyecto}`)}/>
       )}
 
       {errorEliminar && <p role="alert">{errorEliminar}</p>}

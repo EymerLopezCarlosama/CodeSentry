@@ -9,6 +9,7 @@ import { dashboardRouter } from "./dashboard.routes";
 import { checklistRouter } from "./checklist.routes";
 import { analisisRouter } from "./analisis.routes";
 import { reportesRouter } from "./reportes.routes";
+import { revisionesRouter } from "./revisiones.routes";
 
 export const routes = Router();
 
@@ -70,3 +71,4 @@ routes.use(checklistRouter);
 routes.use(analisisRouter);
 routes.use("/sistema", sistemaRouter);
 routes.use(reportesRouter);
+routes.use("/revisiones", revisionesRouter);

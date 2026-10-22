@@ -5,3 +5,14 @@
 //
 // Depende de: services/api.ts, types/index.ts
 // Referencia: docs/api-contract.md (sección "Revisiones")
+
+import { api } from "./api";
+import type { Analisis, DatosNuevaRevision, RevisionCreada } from "../types";
+
+export function crear(datos: DatosNuevaRevision): Promise<RevisionCreada> {
+  return api<RevisionCreada>("/revisiones", { method: "POST", body: datos });
+}
+
+export function obtenerAnalisis(idAnalisis: number): Promise<Analisis> {
+  return api<Analisis>(`/analisis/${idAnalisis}`);
+}
