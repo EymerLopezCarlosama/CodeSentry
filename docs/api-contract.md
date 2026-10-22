@@ -56,6 +56,14 @@ Errores: `400 DATOS_INVALIDOS` (cuerpo mal formado, o `id_archivo` ausente/sobra
 `estado`: `pendiente` · `en_proceso` · `completado` · `fallido`. El frontend consulta cada 2 s mientras no sea `completado`/`fallido`.
 `progreso` no se guarda en BD: el backend lo mantiene en memoria mientras corre el análisis.
 
+**GET `/analisis?proyecto=1&limite=5`** (ambos filtros opcionales) →
+```json
+[ { "id_analisis": 7, "id_proyecto": 1, "proyecto": "Mi API", "tipo_objetivo": "carpeta",
+    "ruta_relativa": null, "fecha_analisis": "2026-10-04", "modelo_ia_usado": "qwen2.5-coder",
+    "estado": "completado", "hallazgos": 12, "graves": 3 } ]
+```
+Historial ordenado del más reciente al más antiguo. `graves` = hallazgos de severidad alta + crítica. `limite`: 1–100. Errores: `400 DATOS_INVALIDOS` (proyecto o límite no numéricos).
+
 ## Resultados (HU-07)
 **GET `/analisis/:id/resultados?severidad=alta`** (filtro opcional) →
 ```json

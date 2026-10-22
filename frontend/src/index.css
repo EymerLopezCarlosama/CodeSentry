@@ -328,3 +328,15 @@ h1, h2, h3 {
   margin: 0;
   color: var(--color-peligro);
 }
+
+/* Estado de análisis (historial) */
+.badge-estado-pendiente { background: var(--color-texto-suave); }
+.badge-estado-en_proceso { background: var(--color-primario); }
+.badge-estado-completado { background: var(--sev-baja); }
+.badge-estado-fallido { background: var(--color-peligro); }
+
+.acciones-fila {
+  display: flex;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}

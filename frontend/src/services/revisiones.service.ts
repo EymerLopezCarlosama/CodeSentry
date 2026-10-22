@@ -7,7 +7,7 @@
 // Referencia: docs/api-contract.md (sección "Revisiones")
 
 import { api } from "./api";
-import type { Analisis, DatosNuevaRevision, RevisionCreada } from "../types";
+import type { Analisis, AnalisisResumen, DatosNuevaRevision, RevisionCreada } from "../types";
 
 export function crear(datos: DatosNuevaRevision): Promise<RevisionCreada> {
   return api<RevisionCreada>("/revisiones", { method: "POST", body: datos });
@@ -15,4 +15,12 @@ export function crear(datos: DatosNuevaRevision): Promise<RevisionCreada> {
 
 export function obtenerAnalisis(idAnalisis: number): Promise<Analisis> {
   return api<Analisis>(`/analisis/${idAnalisis}`);
+}
+
+// Historial de análisis (más recientes primero). Filtros opcionales.
+export function listarAnalisis(filtros: { proyecto?: number; limite?: number } = {}): Promise<AnalisisResumen[]> {
+  const partes: string[] = [];
+  if (filtros.proyecto !== undefined) partes.push(`proyecto=${filtros.proyecto}`);
+  if (filtros.limite !== undefined) partes.push(`limite=${filtros.limite}`);
+  return api<AnalisisResumen[]>(`/analisis${partes.length ? `?${partes.join("&")}` : ""}`);
 }
