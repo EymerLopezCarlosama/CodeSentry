@@ -4,11 +4,14 @@
 // Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
 // Referencia: HU-01, HU-03
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Button from "../common/Button";
+import InstalarModeloModal from "./InstalarModeloModal";
 import type { DatosNuevoProyecto, NombreLenguaje } from "../../types";
 import * as sistemaService from "../../services/sistema.service";
+import * as modelosService from "../../services/modelos.service";
+import { ErrorApi } from "../../services/api";
 
 const LENGUAJES: NombreLenguaje[] = ["JavaScript", "TypeScript", "Python"];
 const MODELO_POR_DEFECTO = "qwen2.5-coder";
@@ -26,11 +29,50 @@ export default function ProyectoForm({
 }: ProyectoFormProps) {
   const [nombre, setNombre] = useState(valoresIniciales?.nombre ?? "");
   const [ruta, setRuta] = useState(valoresIniciales?.ruta_carpeta ?? "");
-  const [modelo, setModelo] = useState(valoresIniciales?.modelo_ia ?? MODELO_POR_DEFECTO);
+  const [modelo, setModelo] = useState(valoresIniciales?.modelo_ia ?? "");
   const [lenguajes, setLenguajes] = useState<NombreLenguaje[]>(valoresIniciales?.lenguajes ?? []);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [examinando, setExaminando] = useState(false);
+
+  const [instalados, setInstalados] = useState<string[]>([]);
+  const [permitidos, setPermitidos] = useState<string[]>([]);
+  const [cargandoModelos, setCargandoModelos] = useState(true);
+  const [errorModelos, setErrorModelos] = useState<string | null>(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
+
+  const cargarModelos = useCallback(async (preferido?: string): Promise<void> => {
+    setCargandoModelos(true);
+    setErrorModelos(null);
+    try {
+      const datos = await modelosService.listar();
+      setInstalados(datos.instalados);
+      setPermitidos(datos.permitidos);
+
+      if (preferido) {
+        setModelo(preferido);
+      } else if (datos.instalados.length >= 1) {
+        setModelo((actual) => actual || datos.instalados[0]);
+      }
+    } catch (err) {
+      if (
+        err instanceof ErrorApi &&
+        (err.codigo === "OLLAMA_NO_DISPONIBLE" || err.codigo === "ANALYZER_NO_DISPONIBLE")
+      ) {
+        setErrorModelos(
+          "Ollama no está disponible. Enciéndelo (y el analyzer) para elegir un modelo."
+        );
+      } else {
+        setErrorModelos(err instanceof Error ? err.message : "No se pudieron cargar los modelos.");
+      }
+    } finally {
+      setCargandoModelos(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void cargarModelos();
+  }, [cargarModelos]);
 
   function alternarLenguaje(lenguaje: NombreLenguaje): void {
     setLenguajes((actuales) =>
@@ -41,17 +83,17 @@ export default function ProyectoForm({
   }
 
   async function examinar(): Promise<void> {
-  setError(null);
-  setExaminando(true);
-  try {
-    const carpeta = await sistemaService.seleccionarCarpeta();
-    if (carpeta) setRuta(carpeta);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Error desconocido.");
-  } finally {
-    setExaminando(false);
+    setError(null);
+    setExaminando(true);
+    try {
+      const carpeta = await sistemaService.seleccionarCarpeta();
+      if (carpeta) setRuta(carpeta);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido.");
+    } finally {
+      setExaminando(false);
+    }
   }
-}
 
   async function manejarEnvio(evento: FormEvent<HTMLFormElement>): Promise<void> {
     evento.preventDefault();
@@ -75,6 +117,11 @@ export default function ProyectoForm({
       setGuardando(false);
     }
   }
+
+  const opciones =
+    modelo && !modelosService.estaInstalado(modelo, instalados)
+      ? [modelo, ...instalados]
+      : instalados;
 
   return (
     <form
@@ -104,10 +151,50 @@ export default function ProyectoForm({
         </div>
       </div>
 
-      <label style={{ display: "grid", gap: "4px" }}>
-        Modelo de Ollama
-        <input value={modelo} onChange={(e) => setModelo(e.target.value)} maxLength={50} />
-      </label>
+      <div style={{ display: "grid", gap: "4px" }}>
+        <label htmlFor="modelo-ollama">Modelo de Ollama</label>
+
+        {cargandoModelos && <small>Buscando modelos instalados...</small>}
+
+        {!cargandoModelos && errorModelos && (
+          <>
+            <p role="alert" style={{ color: "var(--color-peligro)", margin: 0 }}>
+              {errorModelos}
+            </p>
+            <div>
+              <Button variante="secundario" onClick={() => void cargarModelos()}>
+                Reintentar
+              </Button>
+            </div>
+            {modelo && <small>Se conserva el modelo actual: {modelo}</small>}
+          </>
+        )}
+
+        {!cargandoModelos && !errorModelos && instalados.length === 0 && (
+          <>
+            <small>No hay modelos instalados.</small>
+            <div>
+              <Button variante="secundario" onClick={() => setModalAbierto(true)}>
+                Instalar un modelo
+              </Button>
+            </div>
+          </>
+        )}
+
+        {!cargandoModelos && !errorModelos && instalados.length === 1 && opciones.length === 1 && (
+          <input id="modelo-ollama" value={instalados[0]} readOnly />
+        )}
+
+        {!cargandoModelos && !errorModelos && opciones.length > 1 && (
+          <select id="modelo-ollama" value={modelo} onChange={(e) => setModelo(e.target.value)}>
+            {opciones.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       <fieldset style={{ display: "grid", gap: "4px" }}>
         <legend>Lenguajes</legend>
@@ -134,6 +221,16 @@ export default function ProyectoForm({
           {guardando ? "Guardando..." : textoBoton}
         </Button>
       </div>
+
+      <InstalarModeloModal
+        abierto={modalAbierto}
+        modelos={permitidos}
+        onCerrar={() => setModalAbierto(false)}
+        onInstalado={(m) => {
+          setModalAbierto(false);
+          void cargarModelos(m);
+        }}
+      />
     </form>
   );
 }
