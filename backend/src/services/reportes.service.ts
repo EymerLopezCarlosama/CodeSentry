@@ -5,6 +5,8 @@ import { AppError } from "../middlewares/error-handler";
 import * as reportesRepository from "../repositories/reportes.repository";
 import type { AnalisisBasico, DatosReporte } from "../repositories/reportes.repository";
 import { FormatoReporte, Reporte } from "../types";
+import { createWriteStream } from "fs";
+import PDFDocument from "pdfkit";
 
 // REPORTS_DIR es relativo a backend/ (ej. ../storage/reportes)
 function carpetaReportes(): string {
@@ -55,6 +57,39 @@ td,th{border:1px solid #ccc;padding:6px 10px;text-align:left}</style></head>
 </body></html>`;
 }
 
+function aPdf(analisis: AnalisisBasico, datos: DatosReporte, ruta: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const salida = createWriteStream(ruta);
+    salida.on("finish", resolve);
+    salida.on("error", reject);
+    doc.on("error", reject);
+    doc.pipe(salida);
+
+    doc.fontSize(20).text(`Reporte de análisis #${analisis.id_analisis}`);
+    doc.moveDown(0.5);
+    doc
+      .fontSize(11)
+      .text(`Fecha: ${analisis.fecha_analisis}   Modelo: ${analisis.modelo_ia_usado}`);
+    doc.moveDown();
+    doc.fontSize(13).text(`Total de hallazgos: ${datos.total}`);
+
+    doc.moveDown().fontSize(15).text("Por severidad");
+    doc.fontSize(11);
+    for (const [sev, total] of Object.entries(datos.por_severidad)) {
+      doc.text(`• ${sev}: ${total}`);
+    }
+
+    doc.moveDown().fontSize(15).text("Por archivo");
+    doc.fontSize(11);
+    for (const a of datos.por_archivo) {
+      doc.text(`• ${a.ruta_relativa}: ${a.hallazgos}`);
+    }
+
+    doc.end();
+  });
+}
+
 export async function generar(
   idAnalisis: number,
   formato: FormatoReporte
@@ -70,18 +105,20 @@ export async function generar(
       "El análisis aún no está completado; no se puede generar el reporte."
     );
   }
-  if (formato === "pdf") {
-    throw new AppError(501, "FORMATO_NO_DISPONIBLE", "El formato PDF aún no está disponible.");
-  }
-
+  
   const datos = await reportesRepository.datosParaReporte(idAnalisis);
-  const contenido = formato === "json" ? aJson(analisis, datos) : aHtml(analisis, datos);
 
   const carpeta = carpetaReportes();
   await fs.mkdir(carpeta, { recursive: true });
   const nombre = `reporte-${idAnalisis}-${Date.now()}.${formato}`;
   const ruta = path.join(carpeta, nombre);
-  await fs.writeFile(ruta, contenido, "utf-8");
+
+  if (formato === "pdf") {
+    await aPdf(analisis, datos, ruta);
+  } else {
+    const contenido = formato === "json" ? aJson(analisis, datos) : aHtml(analisis, datos);
+    await fs.writeFile(ruta, contenido, "utf-8");
+  }
 
   const id = await reportesRepository.insertar(idAnalisis, formato, ruta);
   return { id_reporte: id, formato, ruta_archivo: ruta };
