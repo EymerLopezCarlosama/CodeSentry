@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { DatosActualizarProyecto, DatosNuevoProyecto, Proyecto } from "../types";
+import type { Archivo, DatosActualizarProyecto, DatosNuevoProyecto, Proyecto } from "../types";
 
 export function listar(): Promise<Proyecto[]> {
   return api<Proyecto[]>("/proyectos");
@@ -19,4 +19,9 @@ export function actualizar(id: number, datos: DatosActualizarProyecto): Promise<
 
 export function eliminar(id: number): Promise<void> {
   return api<void>(`/proyectos/${id}`, { method: "DELETE" });
+}
+
+// HU05 (Jhon): archivos soportados del proyecto, para elegir uno al pedir una revisión
+export function listarArchivos(id: number): Promise<Archivo[]> {
+  return api<Archivo[]>(`/proyectos/${id}/archivos`);
 }

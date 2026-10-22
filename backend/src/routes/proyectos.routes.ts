@@ -22,3 +22,4 @@ proyectosRouter.put(
 );
 
 proyectosRouter.delete("/:id", validate({ params: idParamSchema }), controller.eliminar);
+proyectosRouter.get("/:id/archivos", validate({ params: idParamSchema }), controller.listarArchivos);

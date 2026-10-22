@@ -35,6 +35,7 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 ```json
 [ { "id_archivo": 10, "nombre_archivo": "app.ts", "ruta_relativa": "src/app.ts", "lenguaje": "ts" } ]
 ```
+Errores: `404 PROYECTO_NO_ENCONTRADO` · `400 RUTA_INEXISTENTE` (la carpeta ya no existe). Cada llamada re-escanea la carpeta; los `id_archivo` se conservan.
 
 ## Revisiones (HU-05)
 **POST `/revisiones`** body:
@@ -44,6 +45,7 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 ```
 → `202`: `{ "id_solicitud": 5, "id_analisis": 7, "estado": "pendiente" }`
 Crea la SolicitudRevision y un Analisis en estado `pendiente`, y dispara el escaneo en segundo plano.
+Errores: `400 DATOS_INVALIDOS` (cuerpo mal formado, o `id_archivo` ausente/sobrante según el tipo) · `404 PROYECTO_NO_ENCONTRADO` · `400 ARCHIVO_INVALIDO` (el archivo no pertenece al proyecto o ya no existe) · `400 RUTA_INEXISTENTE` (la carpeta del proyecto ya no existe) · `400 SIN_ARCHIVOS_SOPORTADOS` (no hay `.js`, `.ts` ni `.py` para revisar).
 
 ## Análisis (HU-06)
 **GET `/analisis/:id`** →

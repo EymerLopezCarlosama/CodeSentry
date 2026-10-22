@@ -71,3 +71,45 @@ export interface InstalacionModelo {
 
 // Respuesta de GET /salud (hoy trae backend y base_datos; analyzer y ollama llegan con HU06)
 export type Salud = Record<string, string>;
+
+
+// HU05: archivos, revisiones y análisis (docs/api-contract.md)
+export type CodigoLenguaje = "js" | "ts" | "py";
+export type TipoObjetivo = "carpeta" | "archivo";
+export type EstadoAnalisis = "pendiente" | "en_proceso" | "completado" | "fallido";
+
+// Respuesta de GET /proyectos/:id/archivos
+export interface Archivo {
+  id_archivo: number;
+  nombre_archivo: string;
+  ruta_relativa: string;
+  lenguaje: CodigoLenguaje;
+}
+
+// Cuerpo de POST /revisiones
+export interface DatosNuevaRevision {
+  id_proyecto: number;
+  tipo_objetivo: TipoObjetivo;
+  id_archivo?: number;
+}
+
+// Respuesta 202 de POST /revisiones
+export interface RevisionCreada {
+  id_solicitud: number;
+  id_analisis: number;
+  estado: "pendiente";
+}
+
+export interface Progreso {
+  procesados: number;
+  total: number;
+}
+
+// Respuesta de GET /analisis/:id
+export interface Analisis {
+  id_analisis: number;
+  estado: EstadoAnalisis;
+  modelo_ia_usado: string;
+  fecha_analisis: string;
+  progreso: Progreso;
+}

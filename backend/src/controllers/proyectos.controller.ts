@@ -45,3 +45,12 @@ export async function eliminar(req: Request, res: Response, next: NextFunction):
     next(err);
   }
 }
+
+export async function listarArchivos(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const archivos = await proyectosService.listarArchivos(Number(req.params.id));
+    res.status(200).json(archivos);
+  } catch (err) {
+    next(err);
+  }
+}
