@@ -11,7 +11,7 @@ export default function Sidebar() {
       </NavLink>
       <NavLink to="/proyectos/nuevo">Nuevo proyecto</NavLink>
       <NavLink to="/analisis" end>
-        Análisis
+        Historial de análisis
       </NavLink>
     </nav>
   );
