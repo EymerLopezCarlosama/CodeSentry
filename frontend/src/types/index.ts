@@ -152,3 +152,18 @@ export interface ReporteGenerado {
   formato: FormatoReporte;
   ruta_archivo: string;
 }
+
+
+// Historial de análisis: GET /analisis (docs/api-contract.md)
+export interface AnalisisResumen {
+  id_analisis: number;
+  id_proyecto: number;
+  proyecto: string;
+  tipo_objetivo: TipoObjetivo;
+  ruta_relativa: string | null;
+  fecha_analisis: string;
+  modelo_ia_usado: string;
+  estado: EstadoAnalisis;
+  hallazgos: number;
+  graves: number;
+}

@@ -10,6 +10,9 @@ export default function Sidebar() {
         Proyectos
       </NavLink>
       <NavLink to="/proyectos/nuevo">Nuevo proyecto</NavLink>
+      <NavLink to="/analisis" end>
+        Análisis
+      </NavLink>
     </nav>
   );
 }
