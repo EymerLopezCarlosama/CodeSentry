@@ -135,3 +135,17 @@ export interface ProyectoDetalle extends Proyecto {
   estado: string;
   lenguajes: NombreLenguaje[];
 }
+
+// Historial de análisis (GET /analisis)
+export interface AnalisisResumen {
+  id_analisis: number;
+  id_proyecto: number;
+  proyecto: string;
+  tipo_objetivo: TipoObjetivo;
+  ruta_relativa: string | null;
+  fecha_analisis: string;
+  modelo_ia_usado: string;
+  estado: EstadoAnalisis;
+  hallazgos: number;
+  graves: number; // severidad alta + crítica
+}

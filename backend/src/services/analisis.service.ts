@@ -1,6 +1,6 @@
 import { AppError } from "../middlewares/error-handler";
 import * as repo from "../repositories/analisis.repository";
-import { AnalisisRespuesta, Progreso } from "../types";
+import { AnalisisRespuesta, AnalisisResumen, Progreso } from "../types";
 import { logger } from "../utils/logger";
 import * as analyzerClient from "./analyzer-client.service";
 
@@ -90,4 +90,11 @@ export async function obtener(id: number): Promise<AnalisisRespuesta> {
   const analisis = await repo.obtenerPorId(id);
   if (!analisis) throw new AppError(404, "ANALISIS_NO_ENCONTRADO", "El análisis no existe.");
   return { ...analisis, progreso: progresos.get(id) ?? { procesados: 0, total: 0 } };
+}
+
+export async function listar(filtros: {
+  idProyecto?: number;
+  limite?: number;
+}): Promise<AnalisisResumen[]> {
+  return repo.listar(filtros);
 }

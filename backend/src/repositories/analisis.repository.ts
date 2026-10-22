@@ -1,6 +1,7 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
 import {
+  AnalisisResumen,
   CodigoLenguaje,
   EstadoAnalisis,
   NombreLenguaje,
@@ -200,4 +201,68 @@ export async function insertarResultadosConChecklist(
   } finally {
     conexion.release();
   }
+}
+
+interface FilaResumen extends RowDataPacket {
+  id_analisis: number;
+  id_proyecto: number;
+  proyecto: string;
+  tipo_objetivo: TipoObjetivo;
+  ruta_relativa: string | null;
+  fecha_analisis: string;
+  modelo_ia_usado: string;
+  estado: EstadoAnalisis;
+  hallazgos: number | string;
+  graves: number | string | null;
+}
+
+/** Historial de análisis (más recientes primero). Filtros opcionales: proyecto y límite. */
+export async function listar(filtros: {
+  idProyecto?: number;
+  limite?: number;
+}): Promise<AnalisisResumen[]> {
+  const params: Array<number> = [];
+  let donde = "";
+  if (filtros.idProyecto !== undefined) {
+    donde = "WHERE p.id_proyecto = ?";
+    params.push(filtros.idProyecto);
+  }
+  let limite = "";
+  if (filtros.limite !== undefined) {
+    limite = "LIMIT ?";
+    params.push(filtros.limite);
+  }
+
+  const [filas] = await pool.query<FilaResumen[]>(
+    `SELECT a.id_analisis, p.id_proyecto, p.nombre AS proyecto,
+            s.tipo_objetivo, ar.ruta_relativa,
+            a.fecha_analisis, a.modelo_ia_usado, e.nombre_estado AS estado,
+            COUNT(r.id_resultado) AS hallazgos,
+            SUM(CASE WHEN r.severidad IN ('alta','critica') THEN 1 ELSE 0 END) AS graves
+     FROM Analisis a
+     JOIN SolicitudRevision s ON s.id_solicitud = a.id_solicitud
+     JOIN Proyecto p          ON p.id_proyecto  = s.id_proyecto
+     JOIN Estado e            ON e.id_estado    = a.id_estado
+     LEFT JOIN Archivo ar     ON ar.id_archivo  = s.id_archivo
+     LEFT JOIN Resultado r    ON r.id_analisis  = a.id_analisis
+     ${donde}
+     GROUP BY a.id_analisis, p.id_proyecto, p.nombre, s.tipo_objetivo, ar.ruta_relativa,
+              a.fecha_analisis, a.modelo_ia_usado, e.nombre_estado
+     ORDER BY a.id_analisis DESC
+     ${limite}`,
+    params
+  );
+
+  return filas.map((f) => ({
+    id_analisis: Number(f.id_analisis),
+    id_proyecto: Number(f.id_proyecto),
+    proyecto: String(f.proyecto),
+    tipo_objetivo: f.tipo_objetivo,
+    ruta_relativa: f.ruta_relativa,
+    fecha_analisis: String(f.fecha_analisis),
+    modelo_ia_usado: String(f.modelo_ia_usado),
+    estado: f.estado,
+    hallazgos: Number(f.hallazgos),
+    graves: Number(f.graves ?? 0),
+  }));
 }
