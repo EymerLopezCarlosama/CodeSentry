@@ -1,8 +1,24 @@
-// PROMPT — reportes.routes.ts — Rutas HTTP de reportes (HU-08)
-//
-// Router con POST /analisis/:id/reportes · GET /analisis/:id/reportes · GET /reportes/:id/descargar. Exportar el router.
-//
-// Solo define rutas: sin lógica ni SQL.
-//
-// Depende de: validators + controllers del mismo dominio, middlewares/validate.ts
-// Referencia: docs/api-contract.md (sección "Reportes") · tablas: Reporte, Resultado
+import { Router } from "express";
+import * as controller from "../controllers/reportes.controller";
+import { validate } from "../middlewares/validate";
+import { generarReporteSchema, idParamSchema } from "../validators/reportes.validator";
+
+export const reportesRouter = Router();
+
+reportesRouter.post(
+  "/analisis/:id/reportes",
+  validate({ params: idParamSchema, body: generarReporteSchema }),
+  controller.generar
+);
+
+reportesRouter.get(
+  "/analisis/:id/reportes",
+  validate({ params: idParamSchema }),
+  controller.listar
+);
+
+reportesRouter.get(
+  "/reportes/:id/descargar",
+  validate({ params: idParamSchema }),
+  controller.descargar
+);
