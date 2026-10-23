@@ -29,6 +29,8 @@ class Settings:
     TIMEOUT_ARCHIVO: int = 120  # segundos por archivo
     TAMANO_BLOQUE: int = 200  # líneas por bloque
     MAX_REINTENTOS: int = 3
+    ESCANEO_MAX_ARCHIVOS: int = 20000
+    ESCANEO_MAX_SEGUNDOS: int = 10
 
 
 settings = Settings()
