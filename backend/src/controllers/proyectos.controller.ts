@@ -54,3 +54,12 @@ export async function listarArchivos(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
+
+export async function escanear(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const resultado = await proyectosService.escanearLenguajes(req.body.ruta_carpeta);
+    res.status(200).json(resultado);
+  } catch (err) {
+    next(err);
+  }
+}

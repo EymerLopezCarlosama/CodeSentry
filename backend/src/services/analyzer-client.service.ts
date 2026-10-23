@@ -41,9 +41,17 @@ export interface EstadoInstalacion {
   motivo?: string;
 }
 
+export interface ResultadoEscaneo {
+  soportados: Record<string, number>;
+  no_soportados: Record<string, number>;
+  total_archivos: number;
+  truncado: boolean;
+}
+
 // Códigos con status propio; cualquier otro código del analyzer sale como 502 (api-contract).
 const STATUS_PROPIOS: Record<string, number> = {
   MODELO_NO_PERMITIDO: 400,
+  RUTA_INEXISTENTE: 400,
   DESCARGA_NO_ENCONTRADA: 404,
   JOB_NO_ENCONTRADO: 404,
 };
@@ -61,6 +69,7 @@ async function llamar<T>(
   metodo: "GET" | "POST",
   ruta: string,
   cuerpo?: unknown,
+  timeoutMs: number = TIMEOUT_MS,
 ): Promise<{ status: number; datos: T }> {
   let res: Response;
   try {
@@ -68,7 +77,7 @@ async function llamar<T>(
       method: metodo,
       headers: cuerpo ? { "Content-Type": "application/json" } : undefined,
       body: cuerpo ? JSON.stringify(cuerpo) : undefined,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {
     throw new AppError(502, "ANALYZER_NO_DISPONIBLE", "El analyzer no responde. Verifica que esté encendido.");
@@ -112,4 +121,9 @@ export async function crearTrabajo(entrada: EntradaTrabajo): Promise<{ job_id: s
 
 export async function consultarTrabajo(jobId: string): Promise<SalidaTrabajo> {
   return (await llamar<SalidaTrabajo>("GET", `/analisis/${encodeURIComponent(jobId)}`)).datos;
+}
+
+export async function escanear(rutaBase: string): Promise<ResultadoEscaneo> {
+  // El analyzer corta a los 10 s; damos margen para que responda con truncado: true.
+  return (await llamar<ResultadoEscaneo>("POST", "/escaneo", { ruta_base: rutaBase }, 20_000)).datos;
 }
