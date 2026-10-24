@@ -55,7 +55,16 @@ export default function Header({ salud, sinConexion = false }: HeaderProps) {
             ))
           )}
         </div>
-        <button type="button" className="btn-tema" onClick={alternar} aria-label={etiquetaTema} title={etiquetaTema}>
+        <button
+          type="button"
+          className="btn-tema"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            alternar({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+          }}
+          aria-label={etiquetaTema}
+          title={etiquetaTema}
+        >
           {tema === "oscuro" ? <IconoSol /> : <IconoLuna />}
         </button>
       </div>
