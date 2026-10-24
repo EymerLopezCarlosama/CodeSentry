@@ -1,13 +1,17 @@
 import os
 
-EXTENSIONES: dict[str, str] = {".js": "js", ".ts": "ts", ".py": "py"}
+EXTENSIONES: dict[str, str] = {
+    ".js": "js",
+    ".jsx": "js",
+    ".ts": "ts",
+    ".tsx": "ts",
+    ".py": "py",
+}
 
 NOMBRES_SOPORTADOS: dict[str, str] = {"js": "JavaScript", "ts": "TypeScript", "py": "Python"}
 
 # Lenguajes reconocibles pero fuera del alcance del MVP (el escáner los informa, no los analiza).
 EXTENSIONES_CONOCIDAS: dict[str, str] = {
-    ".jsx": "JavaScript (JSX)",
-    ".tsx": "TypeScript (TSX)",
     ".java": "Java",
     ".php": "PHP",
     ".cs": "C#",
