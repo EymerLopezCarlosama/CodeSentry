@@ -1,12 +1,12 @@
 // PROMPT — services/scanner.service.ts
 //
-// Recorrer la carpeta de un proyecto (fs, solo lectura) ignorando node_modules, .git, dist, build, __pycache__, .venv, y quedarse solo con .js/.ts/.py.
-// Guardar cada archivo en la tabla Archivo con UPSERT sobre (id_proyecto, ruta_relativa): lenguaje "js"|"ts"|"py", nombre_archivo, ruta_relativa con "/". Así los Resultado ya guardados no se pierden al re-escanear.
+// Recorrer la carpeta de un proyecto (fs, solo lectura) ignorando node_modules, .git, dist, build, __pycache__, .venv, y quedarse solo con .js/.jsx/.ts/.tsx/.py.
+// Guardar cada archivo en la tabla Archivo con UPSERT sobre (id_proyecto, ruta_relativa): lenguaje ".js/.jsx/.ts/.tsx/.py", nombre_archivo, ruta_relativa con "/". Así los Resultado ya guardados no se pierden al re-escanear.
 // Devolver la lista de Archivo. Lo usan GET /proyectos/:id/archivos y revisiones.service.
 //
 // Depende de: utils/paths.ts, proyectos.repository.ts (agregar ahí las funciones de Archivo)
 // Referencia: docs/api-contract.md (sección "Archivos del proyecto")
-// Hecho cuando: escanear un proyecto de prueba lista solo sus .js/.ts/.py.
+// Hecho cuando: escanear un proyecto de prueba lista solo sus .js/.jsx/.ts/.tsx/.py.
 
 import type { Dirent } from "fs";
 import fs from "fs/promises";
@@ -21,9 +21,11 @@ const CARPETAS_IGNORADAS = new Set(["node_modules", ".git", "dist", "build", "__
 
 const LENGUAJE_POR_EXTENSION: Record<string, CodigoLenguaje> = {
   ".js": "js",
+  ".jsx": "js",
   ".ts": "ts",
+  ".tsx": "ts",
   ".py": "py",
-};
+};;
 
 // Archivo.ruta_relativa es VARCHAR(255): las rutas más largas se omiten.
 const MAX_LARGO_RUTA = 255;

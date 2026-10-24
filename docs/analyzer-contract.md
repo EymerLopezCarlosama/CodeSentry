@@ -43,7 +43,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 - `lenguaje`: `js` · `ts` · `py`
 
 ## Reglas del analyzer
-1. **Filtro:** solo `.js`, `.ts`, `.py`. Ignora `node_modules`, `.git`, `dist`, `build`, `__pycache__`, `.venv`. Lo demás va a `omitidos` como "lenguaje no soportado".
+1. **Filtro:** solo `.js`, `.jsx`, `.ts`, `.tsx`, `.py` (`.jsx` cuenta como `js` y `.tsx` como `ts`). Ignora `node_modules`, `.git`, `dist`, `build`, `__pycache__`, `.venv`. Lo demás va a `omitidos` como "lenguaje no soportado".
 2. **Solo lectura:** nunca escribe ni ejecuta nada del proyecto analizado.
 3. **Prompt:** se le exige al modelo responder **solo JSON**: lista de `{tipo, descripcion, severidad, linea_codigo}`.
 4. **JSON inválido** (común en modelos 7B): reintentar hasta 3 veces con un prompt más estricto. Si sigue fallando, el archivo va a `errores` y el análisis continúa con los demás.

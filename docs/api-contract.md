@@ -38,7 +38,7 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 **DELETE /proyectos/:id** → `204`. Solo borra el registro en BD (cascada a sus solicitudes), **nunca** archivos del disco. El frontend pide confirmación antes de llamar.
 
 ## Archivos del proyecto (apoyo a HU-05)
-| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.ts/.py) detectados, ignorando node_modules y .git |
+| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.jsx/.ts/.tsx/.py) detectados, ignorando node_modules y .git |
 |---|---|---|
 ```json
 [ { "id_archivo": 10, "nombre_archivo": "app.ts", "ruta_relativa": "src/app.ts", "lenguaje": "ts" } ]
