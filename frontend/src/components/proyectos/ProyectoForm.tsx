@@ -4,13 +4,15 @@
 // Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
 // Referencia: HU-01, HU-03
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Button from "../common/Button";
 import InstalarModeloModal from "./InstalarModeloModal";
-import type { DatosNuevoProyecto, NombreLenguaje } from "../../types";
+import ResumenEscaneo from "./ResumenEscaneo";
+import type { DatosNuevoProyecto, NombreLenguaje, ResultadoEscaneo } from "../../types";
 import * as sistemaService from "../../services/sistema.service";
 import * as modelosService from "../../services/modelos.service";
+import * as proyectosService from "../../services/proyectos.service";
 import { ErrorApi } from "../../services/api";
 
 const LENGUAJES: NombreLenguaje[] = ["JavaScript", "TypeScript", "Python"];
@@ -34,6 +36,13 @@ export default function ProyectoForm({
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [examinando, setExaminando] = useState(false);
+    const [escaneo, setEscaneo] = useState<ResultadoEscaneo | null>(null);
+  const [escaneando, setEscaneando] = useState(false);
+  const [errorEscaneo, setErrorEscaneo] = useState<string | null>(null);
+  // Evita re-escanear la misma ruta (por ejemplo al abrir el formulario de edición)
+  const ultimaRutaEscaneada = useRef((valoresIniciales?.ruta_carpeta ?? "").trim());
+  // Para ignorar respuestas viejas si el usuario cambia de carpeta mientras se escanea
+  const idEscaneo = useRef(0);
 
   const [instalados, setInstalados] = useState<string[]>([]);
   const [permitidos, setPermitidos] = useState<string[]>([]);
@@ -82,12 +91,43 @@ export default function ProyectoForm({
     );
   }
 
+    async function escanearCarpeta(rutaAEscanear: string): Promise<void> {
+    const carpeta = rutaAEscanear.trim();
+    if (carpeta === ultimaRutaEscaneada.current) return;
+    ultimaRutaEscaneada.current = carpeta;
+    const id = ++idEscaneo.current;
+
+    setEscaneo(null);
+    setErrorEscaneo(null);
+    if (!carpeta) {
+      setEscaneando(false);
+      return;
+    }
+
+    setEscaneando(true);
+    try {
+      const resultado = await proyectosService.escanear(carpeta);
+      if (id !== idEscaneo.current) return; // llegó una respuesta vieja
+      setEscaneo(resultado);
+      // Marca solo los lenguajes soportados que se encontraron
+      setLenguajes(LENGUAJES.filter((l) => l in resultado.soportados));
+    } catch (err) {
+      if (id !== idEscaneo.current) return;
+      setErrorEscaneo(err instanceof Error ? err.message : "No se pudo escanear la carpeta.");
+    } finally {
+      if (id === idEscaneo.current) setEscaneando(false);
+    }
+  }
+
   async function examinar(): Promise<void> {
     setError(null);
     setExaminando(true);
     try {
       const carpeta = await sistemaService.seleccionarCarpeta();
-      if (carpeta) setRuta(carpeta);
+      if (carpeta) {
+        setRuta(carpeta);
+        void escanearCarpeta(carpeta);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido.");
     } finally {
@@ -101,6 +141,12 @@ export default function ProyectoForm({
 
     if (!nombre.trim()) return setError("El nombre es obligatorio.");
     if (!ruta.trim()) return setError("La ruta de la carpeta es obligatoria.");
+        if (!ruta.trim()) return setError("La ruta de la carpeta es obligatoria.");
+    if (escaneando) return setError("Espera a que termine el escaneo de la carpeta.");
+    if (escaneo && Object.keys(escaneo.soportados).length === 0) {
+      return setError("La carpeta no tiene lenguajes que pueda analizar (JavaScript, TypeScript o Python).");
+    }
+    if (lenguajes.length === 0) return setError("Seleccione al menos un lenguaje.");
     if (lenguajes.length === 0) return setError("Seleccione al menos un lenguaje.");
 
     setGuardando(true);
@@ -142,6 +188,7 @@ export default function ProyectoForm({
             style={{ flex: 1 }}
             value={ruta}
             onChange={(e) => setRuta(e.target.value)}
+            onBlur={() => void escanearCarpeta(ruta)}
             placeholder="C:\Proyectos\mi-api"
             maxLength={255}
           />
@@ -149,6 +196,7 @@ export default function ProyectoForm({
             📁 {examinando ? "Esperando..." : "Examinar"}
           </Button>
         </div>
+        <ResumenEscaneo cargando={escaneando} resultado={escaneo} error={errorEscaneo} />
       </div>
 
       <div style={{ display: "grid", gap: "4px" }}>
