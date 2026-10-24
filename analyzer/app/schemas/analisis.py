@@ -51,6 +51,16 @@ class SalidaAnalisis(BaseModel):
     resultados: list[Hallazgo] = []
     omitidos: list[Omitido] = []
     errores: list[ErrorArchivo] = []
+    
+class EntradaEscaneo(BaseModel):
+    ruta_base: str = Field(min_length=1)
+
+
+class SalidaEscaneo(BaseModel):
+    soportados: dict[str, int] = {}
+    no_soportados: dict[str, int] = {}
+    total_archivos: int = 0  # archivos revisados (de todo tipo, sin contar carpetas ignoradas)
+    truncado: bool = False  # True si se cortó por el tope de archivos o de tiempo
 
 
 class JobCreado(BaseModel):

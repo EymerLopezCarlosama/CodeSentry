@@ -5,6 +5,7 @@ import { ActualizarProyectoDatos, CrearProyectoDatos } from "../validators/proye
 import { existeCarpeta, normalizarRuta } from "../utils/paths";
 import type { Archivo } from "../types";
 import { escanear } from "./scanner.service";
+import * as analyzerClient from "./analyzer-client.service";
 
 function pendiente(funcion: string): never {
   throw new Error(`proyectos.service.${funcion}: pendiente de implementar`);
@@ -130,4 +131,13 @@ export async function listarArchivos(id: number): Promise<ArchivoRespuesta[]> {
     ruta_relativa,
     lenguaje,
   }));
+}
+
+/** Cuenta archivos por lenguaje de una carpeta, antes de registrar el proyecto (solo lectura). */
+export async function escanearLenguajes(rutaCarpeta: string) {
+  const ruta = normalizarRuta(rutaCarpeta);
+  if (!(await existeCarpeta(ruta))) {
+    throw new AppError(400, "RUTA_INEXISTENTE", "La carpeta no existe en este equipo.");
+  }
+  return analyzerClient.escanear(ruta);
 }

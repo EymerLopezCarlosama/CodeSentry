@@ -34,6 +34,8 @@ export const actualizarProyectoSchema = camposProyecto
     message: "Envíe al menos un campo para actualizar.",
   });
 
+export const escanearProyectoSchema = camposProyecto.pick({ ruta_carpeta: true });
+
 export const idParamSchema = z.object({
   id: z.coerce
     .number({ invalid_type_error: "El id debe ser un número." })

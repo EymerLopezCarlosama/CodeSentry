@@ -18,6 +18,14 @@ Códigos HTTP: 400 datos inválidos · 404 no existe · 409 conflicto · 502 ana
 | PUT | `/proyectos/:id` | Actualizar configuración (HU-03) |
 | DELETE | `/proyectos/:id` | Eliminar registro (HU-04) |
 
+**POST /proyectos/escanear** body `{ "ruta_carpeta": "D:\\Proyectos\\mi-api" }` → `200`
+```json
+{ "soportados": { "JavaScript": 42, "Python": 7 },
+  "no_soportados": { "Java": 12, "PHP": 3 },
+  "total_archivos": 190, "truncado": false }
+```
+Se llama antes de registrar el proyecto (no guarda nada). Solo lectura. `truncado: true` si la carpeta es enorme y el conteo es parcial. Errores: `400 RUTA_INEXISTENTE` · `400 DATOS_INVALIDOS` · `502` analyzer caído.
+
 **Proyecto (respuesta):**
 ```json
 { "id_proyecto": 1, "nombre": "Mi API", "ruta_carpeta": "D:\\Proyectos\\mi-api",
@@ -30,7 +38,7 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 **DELETE /proyectos/:id** → `204`. Solo borra el registro en BD (cascada a sus solicitudes), **nunca** archivos del disco. El frontend pide confirmación antes de llamar.
 
 ## Archivos del proyecto (apoyo a HU-05)
-| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.ts/.py) detectados, ignorando node_modules y .git |
+| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.jsx/.ts/.tsx/.py) detectados, ignorando node_modules y .git |
 |---|---|---|
 ```json
 [ { "id_archivo": 10, "nombre_archivo": "app.ts", "ruta_relativa": "src/app.ts", "lenguaje": "ts" } ]

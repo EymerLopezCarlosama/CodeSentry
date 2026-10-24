@@ -167,3 +167,10 @@ export interface AnalisisResumen {
   hallazgos: number;
   graves: number;
 }
+
+export interface ResultadoEscaneo {
+  soportados: Record<string, number>;
+  no_soportados: Record<string, number>;
+  total_archivos: number;
+  truncado: boolean;
+}

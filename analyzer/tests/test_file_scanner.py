@@ -43,3 +43,10 @@ def test_ruta_base_inexistente(tmp_path):
     with pytest.raises(RutaInexistenteError) as e:
         escanear(str(tmp_path / "no_existe"), "carpeta", None, LENGUAJES)
     assert e.value.codigo == "RUTA_INEXISTENTE" and e.value.status == 400
+
+def test_react_se_incluye(tmp_path):
+    (tmp_path / "App.jsx").write_text("x")
+    (tmp_path / "Vista.tsx").write_text("x")
+    archivos, omitidos = escanear(str(tmp_path), "carpeta", None, LENGUAJES)
+    assert sorted(archivos) == ["App.jsx", "Vista.tsx"]
+    assert omitidos == []

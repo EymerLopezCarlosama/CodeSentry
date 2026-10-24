@@ -12,6 +12,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 | GET | `/modelos` | Modelos instalados y permitidos |
 | POST | `/modelos/instalar` | Inicia la descarga de un modelo permitido → `202` |
 | GET | `/modelos/instalar?modelo=...` | Estado de esa descarga |
+| POST | `/escaneo` | Cuenta archivos por lenguaje de una carpeta, antes de registrarla |
 
 ### POST /analisis (entrada)
 ```json
@@ -42,7 +43,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 - `lenguaje`: `js` · `ts` · `py`
 
 ## Reglas del analyzer
-1. **Filtro:** solo `.js`, `.ts`, `.py`. Ignora `node_modules`, `.git`, `dist`, `build`, `__pycache__`, `.venv`. Lo demás va a `omitidos` como "lenguaje no soportado".
+1. **Filtro:** solo `.js`, `.jsx`, `.ts`, `.tsx`, `.py` (`.jsx` cuenta como `js` y `.tsx` como `ts`). Ignora `node_modules`, `.git`, `dist`, `build`, `__pycache__`, `.venv`. Lo demás va a `omitidos` como "lenguaje no soportado".
 2. **Solo lectura:** nunca escribe ni ejecuta nada del proyecto analizado.
 3. **Prompt:** se le exige al modelo responder **solo JSON**: lista de `{tipo, descripcion, severidad, linea_codigo}`.
 4. **JSON inválido** (común en modelos 7B): reintentar hasta 3 veces con un prompt más estricto. Si sigue fallando, el archivo va a `errores` y el análisis continúa con los demás.
@@ -70,6 +71,20 @@ Si ya está instalado → `200` con `estado: "completado"`. Si ya se está desca
 ```
 `estado`: `descargando` · `completado` · `fallido` (con `"motivo"`). `progreso` en bytes (viene de `/api/pull` de Ollama). Sin descarga registrada y no instalado → `404`.
 El estado de la descarga vive en memoria del analyzer (se pierde al reiniciarlo).
+
+## Escaneo de lenguajes
+**POST /escaneo** body `{ "ruta_base": "D:\\Proyectos\\mi-api" }` → `200`
+```json
+{ "soportados": { "JavaScript": 42, "Python": 7 },
+  "no_soportados": { "Java": 12, "PHP": 3 },
+  "total_archivos": 190,
+  "truncado": false }
+```
+- `soportados`: lenguajes que el analyzer analiza (JavaScript, TypeScript, Python), con el número de archivos.
+- `no_soportados`: lenguajes de código reconocidos pero fuera del alcance. Lo que no es código (.txt, .json, imágenes) no se cuenta.
+- Ignora las mismas carpetas que el análisis (`node_modules`, `.git`, `dist`, ...). Solo lectura.
+- Topes: 20 000 archivos o 10 s. Si se alcanza uno, `truncado: true` y los conteos son parciales.
+- `ruta_base` inexistente → `400 RUTA_INEXISTENTE`.
 
 ## Errores
 | Situación | Respuesta |
