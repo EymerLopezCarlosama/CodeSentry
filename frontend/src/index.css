@@ -881,6 +881,124 @@ legend {
   gap: var(--espacio-2);
 }
 
+/* ===== Dashboard: KPIs con color, gráficos y secciones ===== */
+.kpi {
+  --kpi: var(--color-primario);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.kpi-azul { --kpi: var(--color-primario); }
+.kpi-cian { --kpi: var(--color-acento); }
+.kpi-naranja { --kpi: var(--sev-alta); }
+.kpi-verde { --kpi: var(--sev-baja); }
+.kpi-rojo { --kpi: var(--color-peligro); }
+
+.kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--kpi);
+}
+
+.kpi-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-icono {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: var(--kpi);
+  background: color-mix(in srgb, var(--kpi) 14%, transparent);
+}
+
+.kpi .kpi-valor {
+  background: none;
+  color: var(--kpi);
+}
+
+[data-efectos="alto"] .kpi {
+  border-color: color-mix(in srgb, var(--kpi) 45%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--kpi) 16%, transparent);
+}
+
+/* Gráficos */
+.donut-contenedor {
+  position: relative;
+  height: 220px;
+}
+
+.donut-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut-centro strong {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.donut-centro span {
+  color: var(--color-texto-suave);
+  font-size: 0.8rem;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espacio-3);
+  margin: var(--espacio-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+.leyenda-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+[data-efectos="alto"] .grafico-contenedor .recharts-bar-rectangle path {
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.28));
+}
+
+/* Título de sección con acción a la derecha */
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  margin: var(--espacio-4) 0 var(--espacio-3);
+}
+
+.seccion-titulo h2 {
+  margin: 0;
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,
