@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CodeSentry</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("codesentry-tema");
+          if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oscuro" : "claro";
+          document.documentElement.setAttribute("data-theme", t === "oscuro" ? "dark" : "light");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <!-- PROMPT: página base. React se monta en #root desde src/main.tsx. No agregar lógica aquí. -->
