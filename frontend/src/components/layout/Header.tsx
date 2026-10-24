@@ -13,6 +13,18 @@ const ETIQUETAS: Record<string, string> = {
   ollama: "Ollama",
 };
 
+type Nivel = "ok" | "error" | "cargando";
+
+function resumir(salud: Salud | null, sinConexion: boolean): { nivel: Nivel; texto: string } {
+  if (sinConexion) return { nivel: "error", texto: "Sin conexión con el backend" };
+  if (salud === null) return { nivel: "cargando", texto: "Verificando..." };
+  const fallos = Object.entries(salud)
+    .filter(([, valor]) => valor !== "ok")
+    .map(([clave]) => ETIQUETAS[clave] ?? clave);
+  if (fallos.length === 0) return { nivel: "ok", texto: "Todo operativo" };
+  return { nivel: "error", texto: `Atención: ${fallos.join(", ")}` };
+}
+
 function IconoSol() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -33,28 +45,27 @@ function IconoLuna() {
 export default function Header({ salud, sinConexion = false }: HeaderProps) {
   const { tema, alternar } = useTema();
   const etiquetaTema = tema === "oscuro" ? "Cambiar a tema claro" : "Cambiar a tema oscuro";
+  const resumen = resumir(salud, sinConexion);
 
   return (
     <header className="app-header">
-      <strong>CodeSentry</strong>
+      <div className={`resumen-estado ${resumen.nivel}`} role="status">
+        <span className={`estado-punto ${resumen.nivel}`} />
+        {resumen.texto}
+      </div>
+
       <div className="header-acciones">
-        <div className="estado-plataforma">
-          {sinConexion ? (
-            <span className="estado-item">
-              <span className="estado-punto error" />
-              Sin conexión con el backend
-            </span>
-          ) : salud === null ? (
-            <span className="estado-item">Verificando...</span>
-          ) : (
-            Object.entries(salud).map(([clave, valor]) => (
-              <span key={clave} className="estado-item">
+        {salud !== null && !sinConexion && (
+          <div className="chips-estado">
+            {Object.entries(salud).map(([clave, valor]) => (
+              <span key={clave} className={`chip-estado ${valor === "ok" ? "ok" : "error"}`}>
                 <span className={`estado-punto ${valor === "ok" ? "ok" : "error"}`} />
                 {ETIQUETAS[clave] ?? clave}
               </span>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+
         <button
           type="button"
           className="btn-tema"
