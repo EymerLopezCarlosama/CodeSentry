@@ -10,7 +10,11 @@
           var t = localStorage.getItem("codesentry-tema");
           if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oscuro" : "claro";
           document.documentElement.setAttribute("data-theme", t === "oscuro" ? "dark" : "light");
-        } catch (e) {}
+
+          var e = localStorage.getItem("codesentry-efectos");
+          if (e !== "alto" && e !== "bajo") e = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "bajo" : "alto";
+          document.documentElement.setAttribute("data-efectos", e);
+        } catch (err) {}
       })();
     </script>
   </head>

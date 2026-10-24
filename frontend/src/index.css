@@ -22,6 +22,14 @@
   --fondo-header: rgba(255, 255, 255, 0.82);
   --fondo-modal: rgba(15, 23, 42, 0.5);
 
+  /* Efectos visuales: luces, rejilla y cristal */
+  --brillo-a: rgba(37, 99, 235, 0.2);
+  --brillo-b: rgba(6, 182, 212, 0.18);
+  --rejilla: rgba(37, 99, 235, 0.07);
+  --cristal-a: rgba(255, 255, 255, 0.72);
+  --cristal-b: rgba(236, 243, 255, 0.55);
+  --cristal-borde: rgba(37, 99, 235, 0.28);
+
   /* Severidad: baja (verde), media (amarillo), alta (naranja), crítica (rojo) */
   --sev-baja: #16a34a;
   --sev-media: #eab308;
@@ -62,6 +70,13 @@
   --degradado-primario: linear-gradient(135deg, #3b82f6 0%, #22d3ee 100%);
   --fondo-header: rgba(17, 26, 46, 0.82);
   --fondo-modal: rgba(2, 6, 14, 0.7);
+
+  --brillo-a: rgba(59, 130, 246, 0.32);
+  --brillo-b: rgba(34, 211, 238, 0.22);
+  --rejilla: rgba(96, 165, 250, 0.08);
+  --cristal-a: rgba(24, 36, 64, 0.78);
+  --cristal-b: rgba(11, 18, 32, 0.6);
+  --cristal-borde: rgba(59, 130, 246, 0.45);
 
   --sev-baja: #22c55e;
   --sev-media: #facc15;
@@ -156,7 +171,7 @@ legend {
   font-size: 0.9rem;
 }
 
-/* Layout */
+/* Layout: encabezado arriba, sidebar a la izquierda, contenido a la derecha */
 .app {
   display: grid;
   grid-template-columns: var(--ancho-sidebar) 1fr;
@@ -220,6 +235,7 @@ legend {
   transform: translateX(2px);
 }
 
+/* NavLink agrega la clase "active" a la ruta actual */
 .app-sidebar a.active {
   background: var(--degradado-primario);
   color: var(--color-sobre-primario);
@@ -232,6 +248,7 @@ legend {
   min-width: 0;
 }
 
+/* Entrada suave al cambiar de pantalla */
 .app-contenido > * {
   animation: entrar 0.35s ease both;
 }
@@ -389,7 +406,7 @@ legend {
   margin-top: var(--espacio-4);
 }
 
-/* Etiqueta de severidad */
+/* Etiqueta de severidad (la usa SeveridadBadge) */
 .badge {
   display: inline-block;
   padding: 2px 10px;
@@ -440,7 +457,7 @@ legend {
   color: var(--color-texto-suave);
 }
 
-/* Indicador de estado */
+/* Indicador de estado de la plataforma (Header) */
 .estado-plataforma {
   display: flex;
   align-items: center;
@@ -476,7 +493,7 @@ legend {
   70%, 100% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
 }
 
-/* Tarjetas KPI */
+/* Tarjetas KPI (dashboard) */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -514,16 +531,18 @@ legend {
   font-size: 0.85rem;
 }
 
-/* Dashboard */
+/* Contenedor de gráficos (dashboard) */
 .grafico-contenedor {
   height: 260px;
 }
 
+/* Texto secundario */
 .texto-suave {
   margin: 0;
   color: var(--color-texto-suave);
 }
 
+/* Pantalla del dashboard */
 .graficos-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -536,7 +555,7 @@ legend {
   color: var(--color-peligro);
 }
 
-/* Estado de análisis */
+/* Estado de análisis (historial) */
 .badge-estado-pendiente { background: var(--color-texto-suave); }
 .badge-estado-en_proceso { background: var(--color-primario); }
 .badge-estado-completado { background: var(--sev-baja); }
@@ -548,7 +567,7 @@ legend {
   flex-wrap: wrap;
 }
 
-/* Acciones del header */
+/* Acciones del header y botón de tema */
 .header-acciones {
   display: flex;
   align-items: center;
@@ -577,7 +596,7 @@ legend {
 }
 
 /* ==========================================================================
-   TRANSICIÓN DE TEMA (View Transitions API & Fallback)
+   TRANSICIÓN DE TEMA (View Transitions API y alternativa)
    ========================================================================== */
 
 /* Configuración del viewport completo para la animación circular */
@@ -593,7 +612,7 @@ legend {
   overflow: hidden;
 }
 
-/* Capas por defecto (al pasar de Claro a Oscuro) */
+/* Capas por defecto (al pasar de claro a oscuro) */
 ::view-transition-old(root) {
   z-index: 1;
 }
@@ -602,7 +621,7 @@ legend {
   z-index: 9999;
 }
 
-/* Inversión de capas cuando se pasa a Claro */
+/* Inversión de capas cuando se pasa a claro */
 [data-theme="light"]::view-transition-old(root) {
   z-index: 9999;
 }
@@ -618,13 +637,168 @@ legend {
   transition: none !important;
 }
 
-/* Fallback para navegadores sin View Transitions API */
+/* Alternativa para navegadores sin View Transitions API */
 .tema-fundido,
 .tema-fundido *,
 .tema-fundido *::before,
 .tema-fundido *::after {
   transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease,
     box-shadow 0.45s ease, fill 0.45s ease, stroke 0.45s ease !important;
+}
+
+/* ==========================================================================
+   LAYOUT DE CRISTAL Y EFECTOS VISUALES
+   ========================================================================== */
+
+/* Estructura del sidebar */
+.sidebar-marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) 0 var(--espacio-4);
+}
+
+.sidebar-marca span {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: var(--degradado-primario);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+}
+
+.app-sidebar .sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-pie {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) var(--espacio-2) var(--espacio-1);
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+/* Interruptor (efectos Alta/Baja) */
+.interruptor {
+  position: relative;
+  flex: none;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-borde);
+  cursor: pointer;
+  transition: background var(--transicion);
+}
+
+.interruptor[aria-checked="true"] {
+  background: var(--degradado-primario);
+}
+
+.interruptor-bola {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transicion);
+}
+
+.interruptor[aria-checked="true"] .interruptor-bola {
+  transform: translateX(18px);
+}
+
+/* Efectos ALTOS: luces de fondo, rejilla, cristal y resplandores */
+[data-efectos="alto"] body {
+  background-image:
+    radial-gradient(900px 520px at 8% -8%, var(--brillo-a), transparent 60%),
+    radial-gradient(800px 520px at 100% 0%, var(--brillo-b), transparent 55%),
+    radial-gradient(700px 480px at 60% 110%, var(--brillo-a), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Rejilla tenue que se desvanece hacia los bordes */
+[data-efectos="alto"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--rejilla) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rejilla) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+}
+
+[data-efectos="alto"] .app-sidebar {
+  background: linear-gradient(180deg, var(--cristal-a), var(--cristal-b));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-right: 1px solid var(--cristal-borde);
+  box-shadow: 8px 0 32px -12px var(--color-primario-suave), inset -1px 0 0 var(--cristal-borde);
+}
+
+[data-efectos="alto"] .app-sidebar a.active {
+  box-shadow: 0 0 0 1px var(--cristal-borde), 0 0 22px var(--color-primario-suave);
+}
+
+[data-efectos="alto"] .sidebar-marca svg {
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.45));
+}
+
+/* Tarjetas con aspecto de cristal */
+[data-efectos="alto"] .kpi,
+[data-efectos="alto"] .tarjeta {
+  background: linear-gradient(160deg, var(--cristal-a), var(--cristal-b));
+  border-color: var(--cristal-borde);
+}
+
+[data-efectos="alto"] .kpi:hover {
+  box-shadow: 0 0 0 1px var(--cristal-borde), 0 12px 32px var(--color-primario-suave);
+}
+
+/* Efectos BAJOS: sin desenfoques ni animaciones decorativas (para equipos justos de recursos) */
+[data-efectos="bajo"] .app-header {
+  background: var(--color-superficie);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-efectos="bajo"] .modal-fondo {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-efectos="bajo"] .estado-punto.ok,
+[data-efectos="bajo"] .app-contenido > * {
+  animation: none;
+}
+
+[data-efectos="bajo"] .kpi:hover,
+[data-efectos="bajo"] .btn:hover:not(:disabled),
+[data-efectos="bajo"] .app-sidebar a:hover {
+  transform: none;
 }
 
 /* Accesibilidad: movimiento reducido */
