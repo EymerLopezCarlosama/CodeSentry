@@ -1,7 +1,5 @@
-// PROMPT — components/revision/SolicitudRevisionForm.tsx
-//
-// Formulario para elegir el alcance de la revisión: toda la carpeta del proyecto o un archivo puntual (lista de GET /proyectos/:id/archivos, solo .js/.ts/.py). Props: idProyecto, onIniciar.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
+// Formulario para elegir el alcance de la revisión: toda la carpeta del proyecto o un archivo puntual
+// (lista de GET /proyectos/:id/archivos). Componente de presentación (sin llamadas a la API).
 // Referencia: HU-05
 
 import { useState } from "react";
@@ -39,41 +37,45 @@ export default function SolicitudRevisionForm({
   }
 
   return (
-    <form
-      className="tarjeta"
-      onSubmit={manejarEnvio}
-      style={{ display: "grid", gap: "16px", maxWidth: "560px" }}
-    >
+    <form className="tarjeta revision-form" onSubmit={manejarEnvio}>
       {sinArchivos && (
-        <p role="alert" style={{ color: "var(--color-peligro)", margin: 0 }}>
-          Este proyecto no tiene archivos .js, .ts ni .py para revisar.
+        <p role="alert" className="mensaje-error">
+          Este proyecto no tiene archivos .js, .jsx, .ts, .tsx ni .py para revisar.
         </p>
       )}
 
-      <fieldset style={{ display: "grid", gap: "4px" }}>
+      <fieldset className="alcance-opciones">
         <legend>¿Qué desea revisar?</legend>
-        <label>
+
+        <label className={`opcion-alcance${objetivo === "carpeta" ? " activa" : ""}`}>
           <input
             type="radio"
             name="objetivo"
             checked={objetivo === "carpeta"}
             onChange={() => setObjetivo("carpeta")}
-          />{" "}
-          Toda la carpeta del proyecto
+          />
+          <span>
+            <strong>Toda la carpeta del proyecto</strong>
+            <small>{archivos.length} archivos analizables</small>
+          </span>
         </label>
-        <label>
+
+        <label className={`opcion-alcance${objetivo === "archivo" ? " activa" : ""}`}>
           <input
             type="radio"
             name="objetivo"
             checked={objetivo === "archivo"}
             onChange={() => setObjetivo("archivo")}
-          />{" "}
-          Un archivo puntual
+          />
+          <span>
+            <strong>Un archivo puntual</strong>
+            <small>Más rápido: ideal para probar</small>
+          </span>
         </label>
       </fieldset>
 
       {objetivo === "archivo" && (
-        <label style={{ display: "grid", gap: "4px" }}>
+        <label className="campo">
           Archivo
           <select
             value={idArchivo ?? ""}
@@ -90,7 +92,7 @@ export default function SolicitudRevisionForm({
       )}
 
       {error && (
-        <p role="alert" style={{ color: "var(--color-peligro)", margin: 0 }}>
+        <p role="alert" className="mensaje-error">
           {error}
         </p>
       )}

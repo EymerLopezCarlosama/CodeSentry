@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useEfectos } from "../../hooks/useEfectos";
 import { IconoCarpeta, IconoDashboard, IconoHistorial, IconoNuevo } from "./Iconos";
 import LogoEscudo from "./LogoEscudo";
@@ -16,10 +16,10 @@ export default function Sidebar() {
 
   return (
     <nav className="app-sidebar" aria-label="Navegación principal">
-      <div className="sidebar-marca">
+      <Link to="/" className="sidebar-marca" aria-label="CodeSentry: ir al Dashboard" title="Ir al Dashboard">
         <LogoEscudo />
         <span>CodeSentry</span>
-      </div>
+      </Link>
 
       <div className="sidebar-nav">
         {ENLACES.map((enlace) => (

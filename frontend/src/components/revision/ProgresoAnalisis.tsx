@@ -1,7 +1,6 @@
-// PROMPT — components/revision/ProgresoAnalisis.tsx
-//
-// Barra de progreso: procesados / total, con el estado (en proceso, completado, fallido). Props: estado, progreso.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
+// Barra de progreso: procesados / total, con el estado (en proceso, completado, fallido).
+// Mientras no se conoce el total (se está preparando el trabajo) no se simula un porcentaje.
+// Componente de presentación (sin llamadas a la API).
 // Referencia: HU-06
 
 import type { EstadoAnalisis, Progreso } from "../../types";
@@ -18,25 +17,24 @@ const ETIQUETAS: Record<EstadoAnalisis, string> = {
   fallido: "Falló el análisis",
 };
 
-const COLORES: Record<EstadoAnalisis, string> = {
-  pendiente: "var(--color-primario)",
-  en_proceso: "var(--color-primario)",
-  completado: "var(--sev-baja)",
-  fallido: "var(--color-peligro)",
-};
-
 export default function ProgresoAnalisis({ estado, progreso }: ProgresoAnalisisProps) {
   if (estado === null) return null;
 
+  const preparando = (estado === "pendiente" || estado === "en_proceso") && progreso.total === 0;
+
   const porcentaje =
-    progreso.total > 0 ? Math.min(100, Math.round((progreso.procesados / progreso.total) * 100)) : 0;
+    estado === "completado"
+      ? 100
+      : progreso.total > 0
+        ? Math.min(100, Math.round((progreso.procesados / progreso.total) * 100))
+        : 0;
 
   return (
-    <div className="tarjeta" style={{ display: "grid", gap: "8px", maxWidth: "560px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <strong>{ETIQUETAS[estado]}</strong>
-        <span>
-          {progreso.procesados} de {progreso.total} archivos
+    <div className={`tarjeta progreso progreso-${estado}`} role="status">
+      <div className="progreso-cabecera">
+        <strong>{preparando ? "Preparando el análisis..." : ETIQUETAS[estado]}</strong>
+        <span className="progreso-conteo">
+          {preparando ? "Detectando archivos..." : `${progreso.procesados} de ${progreso.total} archivos`}
         </span>
       </div>
 
@@ -44,25 +42,14 @@ export default function ProgresoAnalisis({ estado, progreso }: ProgresoAnalisisP
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={porcentaje}
-        style={{
-          height: "12px",
-          background: "var(--color-borde)",
-          borderRadius: "999px",
-          overflow: "hidden",
-        }}
+        aria-valuenow={preparando ? undefined : porcentaje}
+        aria-busy={preparando}
+        className={`progreso-pista${preparando ? " indeterminado" : ""}`}
       >
-        <div
-          style={{
-            width: `${porcentaje}%`,
-            height: "100%",
-            background: COLORES[estado],
-            transition: "width 0.3s",
-          }}
-        />
+        <div className="progreso-relleno" style={preparando ? undefined : { width: `${porcentaje}%` }} />
       </div>
 
-      <span style={{ color: "var(--color-texto-suave)" }}>{porcentaje} %</span>
+      {!preparando && <span className="progreso-porcentaje">{porcentaje} %</span>}
     </div>
   );
 }
