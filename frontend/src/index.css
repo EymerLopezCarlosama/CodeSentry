@@ -999,6 +999,87 @@ legend {
   margin: 0;
 }
 
+/* ===== Tablas: contenedor, celdas y estados ===== */
+.tabla-contenedor {
+  overflow-x: auto;
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.tabla-contenedor .tabla {
+  box-shadow: none;
+}
+
+.celda-id {
+  color: var(--color-texto-suave);
+  font-family: var(--fuente-mono);
+  font-size: 0.85rem;
+}
+
+.celda-fuerte {
+  font-weight: 700;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 0.85rem;
+}
+
+/* Estados de análisis: etiqueta suave con punto (mejor contraste en claro y oscuro) */
+.badge-estado-pendiente { --estado: var(--color-texto-suave); }
+.badge-estado-en_proceso { --estado: var(--color-primario); }
+.badge-estado-completado { --estado: var(--sev-baja); }
+.badge-estado-fallido { --estado: var(--color-peligro); }
+
+.badge[class*="badge-estado-"] {
+  background: color-mix(in srgb, var(--estado) 15%, transparent);
+  color: var(--estado);
+  border: 1px solid color-mix(in srgb, var(--estado) 40%, transparent);
+}
+
+.badge-punto {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+.badge-estado-en_proceso .badge-punto {
+  animation: parpadeo 1.2s ease-in-out infinite;
+}
+
+@keyframes parpadeo {
+  50% { opacity: 0.25; }
+}
+
+[data-efectos="bajo"] .badge-estado-en_proceso .badge-punto {
+  animation: none;
+}
+
+/* Chip de hallazgos graves */
+.chip-graves {
+  display: inline-block;
+  min-width: 30px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.chip-graves.hay {
+  color: var(--color-peligro);
+  background: color-mix(in srgb, var(--color-peligro) 15%, transparent);
+}
+
+.chip-graves.cero {
+  color: var(--sev-baja);
+  background: color-mix(in srgb, var(--sev-baja) 15%, transparent);
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,
