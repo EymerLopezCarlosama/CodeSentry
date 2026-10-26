@@ -19,8 +19,14 @@ const ETIQUETAS_CHECKLIST: Record<EstadoChecklist, string> = {
   rechazada: "Rechazada",
 };
 
-const CONTEXTO_BASICO = 6;
-const CONTEXTO_AMPLIO = 20;
+// Cuánto código se muestra: líneas a cada lado de la marcada
+const NIVELES = [
+  { etiqueta: "Solo la línea", contexto: 0 },
+  { etiqueta: "Cerca", contexto: 2 },
+  { etiqueta: "Normal", contexto: 6 },
+  { etiqueta: "Amplio", contexto: 20 },
+];
+const CONTEXTO_INICIAL = 2;
 
 interface HallazgoCardProps {
   hallazgo: HallazgoDato;
@@ -30,7 +36,7 @@ interface HallazgoCardProps {
 
 export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }: HallazgoCardProps) {
   const [abierto, setAbierto] = useState(resaltado);
-  const [contexto, setContexto] = useState(CONTEXTO_BASICO);
+  const [contexto, setContexto] = useState(CONTEXTO_INICIAL);
   const [fragmento, setFragmento] = useState<FragmentoCodigo | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +51,7 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
     tarjeta.current?.scrollIntoView({ behavior: reducido ? "auto" : "smooth", block: "center" });
   }, [resaltado]);
 
-  // Carga el código al abrir (y otra vez si se pide más contexto o se reintenta)
+  // Carga el código al abrir (y otra vez si cambia el nivel o se reintenta)
   useEffect(() => {
     if (!abierto) return;
     let activo = true;
@@ -78,10 +84,6 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
     window.setTimeout(() => setCopiado(null), 2000);
   }
 
-  const hayMas = fragmento !== null && (fragmento.desde > 1 || fragmento.hasta < fragmento.total_lineas);
-  const puedeAmpliar = contexto === CONTEXTO_BASICO && hayMas;
-  const puedeReducir = contexto === CONTEXTO_AMPLIO;
-
   return (
     <article
       id={`hallazgo-${hallazgo.id_resultado}`}
@@ -110,6 +112,21 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
 
       {abierto && (
         <div className="hallazgo-codigo">
+          <div className="contexto-selector" role="group" aria-label="Cantidad de código a mostrar">
+            <span className="contexto-titulo">Mostrar:</span>
+            {NIVELES.map((nivel) => (
+              <button
+                key={nivel.contexto}
+                type="button"
+                className={`contexto-op${contexto === nivel.contexto ? " activo" : ""}`}
+                aria-pressed={contexto === nivel.contexto}
+                onClick={() => setContexto(nivel.contexto)}
+              >
+                {nivel.etiqueta}
+              </button>
+            ))}
+          </div>
+
           {error && (
             <div>
               <p className="mensaje-error" role="alert">
@@ -124,18 +141,6 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
           {!error && fragmento && <VisorCodigo fragmento={fragmento} severidad={hallazgo.severidad} />}
 
           {cargando && <small role="status">Cargando código...</small>}
-
-          {!error && !cargando && (puedeAmpliar || puedeReducir) && (
-            <div>
-              <Button
-                tamano="pequeno"
-                variante="secundario"
-                onClick={() => setContexto(puedeAmpliar ? CONTEXTO_AMPLIO : CONTEXTO_BASICO)}
-              >
-                {puedeAmpliar ? "Ver más contexto" : "Ver menos"}
-              </Button>
-            </div>
-          )}
         </div>
       )}
     </article>

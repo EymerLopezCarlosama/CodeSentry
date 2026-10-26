@@ -1685,7 +1685,9 @@ legend {
 }
 
 .visor-codigo {
-  overflow-x: auto;
+  position: relative;
+  max-height: 340px;
+  overflow: auto;
   padding: 6px 0;
 }
 
@@ -1740,6 +1742,42 @@ legend {
   border-top: 1px solid var(--visor-borde);
   color: var(--visor-num);
   font-size: 0.75rem;
+}
+
+/* Selector de cantidad de código */
+.contexto-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.contexto-titulo {
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+.contexto-op {
+  padding: 4px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transicion), background-color var(--transicion);
+}
+
+.contexto-op:hover {
+  border-color: var(--color-primario);
+}
+
+.contexto-op.activo {
+  border-color: var(--color-primario);
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
 }
 
 /* Accesibilidad: movimiento reducido */

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { FragmentoCodigo, Severidad } from "../../types";
 
 interface VisorCodigoProps {
@@ -6,6 +7,19 @@ interface VisorCodigoProps {
 }
 
 export default function VisorCodigo({ fragmento, severidad }: VisorCodigoProps) {
+  const caja = useRef<HTMLDivElement>(null);
+
+  // Deja la línea marcada en el centro del visor cuando hay scroll interno
+  useEffect(() => {
+    const contenedor = caja.current;
+    const marcada = contenedor?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!contenedor || !marcada) return;
+    contenedor.scrollTop = Math.max(
+      0,
+      marcada.offsetTop - contenedor.clientHeight / 2 + marcada.offsetHeight / 2
+    );
+  }, [fragmento]);
+
   return (
     <div className={`visor sev-${severidad}`}>
       <div className="visor-cabecera">
@@ -25,6 +39,7 @@ export default function VisorCodigo({ fragmento, severidad }: VisorCodigoProps) 
       )}
 
       <div
+        ref={caja}
         className="visor-codigo"
         role="region"
         aria-label={`Código de ${fragmento.ruta_relativa}`}
