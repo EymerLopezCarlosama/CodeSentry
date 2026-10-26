@@ -1,20 +1,17 @@
-// PROMPT — pages/Resultados.tsx
-//
-// Pantalla de hallazgos de un análisis (GET /analisis/:id/resultados): filtro por severidad y ResultadoTable. Si el análisis no terminó, mostrar su estado en vez de una tabla vacía. Enlaces a Checklist y Reporte.
-// La pantalla une hooks/services con componentes; la lógica de datos va en hooks y el HTML repetible en components.
-//
-// Depende de: services/resultados.service.ts + components/resultados/*
+// Pantalla de hallazgos de un análisis (GET /analisis/:id/resultados): filtro por severidad, tarjetas con
+// visor de código y enlaces directos. Si el análisis no terminó, muestra su estado.
 // Referencia: HU-07
 
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Button from "../components/common/Button";
 import Loader from "../components/common/Loader";
+import EncabezadoPagina from "../components/layout/EncabezadoPagina";
 import ResultadoTable from "../components/resultados/ResultadoTable";
 import * as resultadosService from "../services/resultados.service";
 import type { EstadoAnalisis, ResultadosAgrupados, Severidad } from "../types";
 
-const OPCIONES_SEVERIDAD: { valor: Severidad | ""; texto: string }[] = [
+const FILTROS: { valor: Severidad | ""; texto: string }[] = [
   { valor: "", texto: "Todas" },
   { valor: "critica", texto: "Crítica" },
   { valor: "alta", texto: "Alta" },
@@ -31,10 +28,15 @@ const MENSAJES_ESTADO: Record<Exclude<EstadoAnalisis, "completado">, string> = {
 
 export default function Resultados() {
   const { id } = useParams();
+  const { hash } = useLocation();
   const navigate = useNavigate();
 
   const idAnalisis = Number(id);
   const idValido = Number.isInteger(idAnalisis) && idAnalisis > 0;
+
+  // Enlace directo a un hallazgo: /analisis/14/resultados#hallazgo-43
+  const coincidencia = /^#hallazgo-(\d+)$/.exec(hash);
+  const idResaltado = coincidencia ? Number(coincidencia[1]) : null;
 
   const [severidad, setSeveridad] = useState<Severidad | "">("");
   const [datos, setDatos] = useState<ResultadosAgrupados | null>(null);
@@ -49,7 +51,7 @@ export default function Resultados() {
     setError(null);
 
     resultadosService
-      .obtener(idAnalisis, severidad || undefined)
+      .obtener(idAnalisis)
       .then((respuesta) => {
         if (activo) setDatos(respuesta);
       })
@@ -65,12 +67,32 @@ export default function Resultados() {
     return () => {
       activo = false;
     };
-  }, [idAnalisis, idValido, severidad, version]);
+  }, [idAnalisis, idValido, version]);
+
+  // Conteos por severidad y filtrado en el navegador (una sola petición)
+  const conteos = useMemo(() => {
+    const c: Record<Severidad, number> = { critica: 0, alta: 0, media: 0, baja: 0 };
+    datos?.archivos.forEach((a) =>
+      a.hallazgos.forEach((h) => {
+        c[h.severidad] += 1;
+      })
+    );
+    return c;
+  }, [datos]);
+  const total = conteos.critica + conteos.alta + conteos.media + conteos.baja;
+
+  const archivosVisibles = useMemo(() => {
+    if (!datos) return [];
+    if (!severidad) return datos.archivos;
+    return datos.archivos
+      .map((a) => ({ ...a, hallazgos: a.hallazgos.filter((h) => h.severidad === severidad) }))
+      .filter((a) => a.hallazgos.length > 0);
+  }, [datos, severidad]);
 
   if (!idValido) {
     return (
       <section>
-        <h1>Resultados del análisis</h1>
+        <EncabezadoPagina titulo="Resultados del análisis" />
         <div className="tarjeta">
           <p>El análisis indicado no es válido.</p>
           <Button onClick={() => navigate("/proyectos")}>Volver a proyectos</Button>
@@ -80,10 +102,11 @@ export default function Resultados() {
   }
 
   return (
-    <section style={{ display: "grid", gap: "16px" }}>
-      <h1>Resultados del análisis #{idAnalisis}</h1>
-
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+    <section>
+      <EncabezadoPagina
+        titulo={`Resultados del análisis #${idAnalisis}`}
+        descripcion="Hallazgos agrupados por archivo, de mayor a menor severidad."
+      >
         <Button variante="secundario" onClick={() => navigate(`/analisis/${idAnalisis}/checklist`)}>
           Ir al checklist
         </Button>
@@ -93,30 +116,17 @@ export default function Resultados() {
         <Button variante="secundario" onClick={() => navigate("/proyectos")}>
           Volver a proyectos
         </Button>
-      </div>
-
-      {datos?.estado === "completado" && (
-        <label style={{ display: "grid", gap: "4px", maxWidth: "240px" }}>
-          Filtrar por severidad
-          <select
-            value={severidad}
-            onChange={(e) => setSeveridad(e.target.value as Severidad | "")}
-          >
-            {OPCIONES_SEVERIDAD.map((opcion) => (
-              <option key={opcion.valor} value={opcion.valor}>
-                {opcion.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+      </EncabezadoPagina>
 
       {cargando && <Loader />}
 
       {!cargando && error && (
-        <p role="alert" style={{ color: "var(--color-peligro)", margin: 0 }}>
-          {error}
-        </p>
+        <div className="tarjeta alerta-error" role="alert">
+          <p className="mensaje-error">{error}</p>
+          <Button variante="secundario" onClick={() => setVersion((v) => v + 1)}>
+            Reintentar
+          </Button>
+        </div>
       )}
 
       {!cargando && !error && datos && datos.estado !== "completado" && (
@@ -126,18 +136,35 @@ export default function Resultados() {
         </div>
       )}
 
-      {!cargando && !error && datos?.estado === "completado" && datos.archivos.length === 0 && (
+      {!cargando && !error && datos?.estado === "completado" && total === 0 && (
         <div className="tarjeta">
-          <p style={{ margin: 0 }}>
-            {severidad
-              ? "No hay hallazgos con esa severidad."
-              : "El análisis terminó sin hallazgos."}
-          </p>
+          <p style={{ margin: 0 }}>El análisis terminó sin hallazgos.</p>
         </div>
       )}
 
-      {!cargando && !error && datos?.estado === "completado" && (
-        <ResultadoTable archivos={datos.archivos} />
+      {!cargando && !error && datos?.estado === "completado" && total > 0 && (
+        <>
+          <div className="filtros-severidad" role="group" aria-label="Filtrar por severidad">
+            {FILTROS.map((filtro) => {
+              const cantidad = filtro.valor === "" ? total : conteos[filtro.valor];
+              const activo = severidad === filtro.valor;
+              return (
+                <button
+                  key={filtro.valor || "todas"}
+                  type="button"
+                  className={`filtro-chip${filtro.valor ? ` sev-${filtro.valor}` : ""}${activo ? " activo" : ""}`}
+                  onClick={() => setSeveridad(filtro.valor)}
+                  disabled={filtro.valor !== "" && cantidad === 0}
+                  aria-pressed={activo}
+                >
+                  {filtro.texto} <span className="filtro-n">{cantidad}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <ResultadoTable archivos={archivosVisibles} idAnalisis={idAnalisis} idResaltado={idResaltado} />
+        </>
       )}
     </section>
   );

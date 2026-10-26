@@ -174,3 +174,19 @@ export interface ResultadoEscaneo {
   total_archivos: number;
   truncado: boolean;
 }
+
+export interface LineaCodigo {
+  numero: number;
+  texto: string;
+}
+
+export interface FragmentoCodigo {
+  ruta_relativa: string;
+  lenguaje: string;
+  linea: number; // línea del hallazgo
+  desde: number;
+  hasta: number;
+  total_lineas: number;
+  linea_fuera_de_rango: boolean; // el archivo cambió y ya no tiene esa línea
+  lineas: LineaCodigo[];
+}
