@@ -1,11 +1,3 @@
-// PROMPT — pages/Dashboard.tsx
-//
-// Pantalla del dashboard: carga GET /dashboard y muestra KpiCards, GraficoSeveridad, GraficoChecklist y el detalle por proyecto. Si no hay proyectos, EmptyState.
-// La pantalla une hooks/services con componentes; la lógica de datos va en hooks y el HTML repetible en components.
-//
-// Depende de: services/dashboard.service.ts + components/dashboard/*
-// Referencia: HU-10
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AnalisisTable from "../components/analisis/AnalisisTable";
@@ -15,9 +7,12 @@ import Loader from "../components/common/Loader";
 import GraficoChecklist from "../components/dashboard/GraficoChecklist";
 import GraficoSeveridad from "../components/dashboard/GraficoSeveridad";
 import KpiCards from "../components/dashboard/KpiCards";
+import EncabezadoPagina from "../components/layout/EncabezadoPagina";
 import * as dashboardService from "../services/dashboard.service";
 import * as revisionesService from "../services/revisiones.service";
 import type { AnalisisResumen, Dashboard as DatosDashboard } from "../types";
+
+const DESCRIPCION = "Estado general de tus proyectos, hallazgos y revisiones.";
 
 export default function Dashboard() {
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
@@ -57,7 +52,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <>
-        <h1>Dashboard</h1>
+        <EncabezadoPagina titulo="Dashboard" descripcion={DESCRIPCION} />
         <div className="tarjeta">
           <p className="mensaje-error">{error}</p>
         </div>
@@ -68,7 +63,7 @@ export default function Dashboard() {
   if (!datos) {
     return (
       <>
-        <h1>Dashboard</h1>
+        <EncabezadoPagina titulo="Dashboard" descripcion={DESCRIPCION} />
         <Loader />
       </>
     );
@@ -77,7 +72,7 @@ export default function Dashboard() {
   if (datos.totales.proyectos === 0) {
     return (
       <>
-        <h1>Dashboard</h1>
+        <EncabezadoPagina titulo="Dashboard" descripcion={DESCRIPCION} />
         <EmptyState />
       </>
     );
@@ -85,13 +80,18 @@ export default function Dashboard() {
 
   return (
     <>
-      <h1>Dashboard</h1>
+      <EncabezadoPagina titulo="Dashboard" descripcion={DESCRIPCION}>
+        <Button onClick={() => navigate("/proyectos/nuevo")}>Nuevo proyecto</Button>
+      </EncabezadoPagina>
+
       <KpiCards datos={datos} />
+
       <div className="graficos-grid">
         <GraficoSeveridad por_severidad={datos.por_severidad} />
         <GraficoChecklist checklist={datos.checklist} />
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+      <div className="seccion-titulo">
         <h2>Análisis recientes</h2>
         <Button variante="secundario" onClick={() => navigate("/analisis")}>
           Ver todos
@@ -104,7 +104,10 @@ export default function Dashboard() {
       ) : (
         <AnalisisTable analisis={recientes} compacta />
       )}
-      <h2>Detalle por proyecto</h2>
+
+      <div className="seccion-titulo">
+        <h2>Detalle por proyecto</h2>
+      </div>
       <table className="tabla">
         <thead>
           <tr>

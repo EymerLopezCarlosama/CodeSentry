@@ -1,18 +1,48 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { useEfectos } from "../../hooks/useEfectos";
+import { IconoCarpeta, IconoDashboard, IconoHistorial, IconoNuevo } from "./Iconos";
+import LogoEscudo from "./LogoEscudo";
+
+const ENLACES = [
+  { to: "/", etiqueta: "Dashboard", icono: <IconoDashboard />, end: true },
+  { to: "/proyectos", etiqueta: "Proyectos", icono: <IconoCarpeta />, end: true },
+  { to: "/proyectos/nuevo", etiqueta: "Nuevo proyecto", icono: <IconoNuevo />, end: false },
+  { to: "/analisis", etiqueta: "Historial de análisis", icono: <IconoHistorial />, end: true },
+];
 
 export default function Sidebar() {
+  const { efectos, alternar } = useEfectos();
+  const activos = efectos === "alto";
+
   return (
-    <nav className="app-sidebar">
-      <NavLink to="/" end>
-        Dashboard
-      </NavLink>
-      <NavLink to="/proyectos" end>
-        Proyectos
-      </NavLink>
-      <NavLink to="/proyectos/nuevo">Nuevo proyecto</NavLink>
-      <NavLink to="/analisis" end>
-        Historial de análisis
-      </NavLink>
+    <nav className="app-sidebar" aria-label="Navegación principal">
+      <Link to="/" className="sidebar-marca" aria-label="CodeSentry: ir al Dashboard" title="Ir al Dashboard">
+        <LogoEscudo />
+        <span>CodeSentry</span>
+      </Link>
+
+      <div className="sidebar-nav">
+        {ENLACES.map((enlace) => (
+          <NavLink key={enlace.to} to={enlace.to} end={enlace.end}>
+            {enlace.icono}
+            <span>{enlace.etiqueta}</span>
+          </NavLink>
+        ))}
+      </div>
+
+      <div className="sidebar-pie">
+        <span>Efectos visuales</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={activos}
+          className="interruptor"
+          onClick={alternar}
+          title={activos ? "Efectos altos: pulsa para bajarlos" : "Efectos bajos: pulsa para subirlos"}
+        >
+          <span className="interruptor-bola" />
+        </button>
+      </div>
     </nav>
   );
 }

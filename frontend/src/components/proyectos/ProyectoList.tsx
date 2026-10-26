@@ -1,7 +1,5 @@
-// PROMPT — components/proyectos/ProyectoList.tsx
-//
-// Tabla de proyectos: nombre, ruta, modelo de Ollama, fecha de registro y acciones Editar / Eliminar / Revisar. Eliminar abre el Modal de confirmación. Props: proyectos + callbacks.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
+// Lista de proyectos como tarjetas: nombre, ruta, lenguajes, modelo de Ollama, fecha de registro y
+// acciones Editar / Eliminar / Revisar. Componente de presentación (sin llamadas a la API).
 // Referencia: HU-02, HU-04
 
 import Button from "../common/Button";
@@ -22,35 +20,43 @@ export default function ProyectoList({
   onRevisar,
 }: ProyectoListProps) {
   return (
-    <table className="tabla">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Ruta</th>
-          <th>Modelo</th>
-          <th>Fecha de registro</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {proyectos.map((proyecto) => (
-          <tr key={proyecto.id_proyecto}>
-            <td>{proyecto.nombre}</td>
-            <td>{proyecto.ruta_carpeta}</td>
-            <td>{proyecto.modelo_ia}</td>
-            <td>{formatearFecha(proyecto.fecha_registro)}</td>
-            <td>
-              <Button variante="secundario" onClick={() => onEditar?.(proyecto)}>
-                Editar
-              </Button>{" "}
-              <Button variante="peligro" onClick={() => onEliminar?.(proyecto)}>
-                Eliminar
-              </Button>{" "}
-              <Button onClick={() => onRevisar?.(proyecto)}>Revisar</Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="proyectos-grid">
+      {proyectos.map((proyecto) => (
+        <article key={proyecto.id_proyecto} className="tarjeta proyecto-card">
+          <div className="proyecto-cabecera">
+            <span className="proyecto-avatar" aria-hidden="true">
+              {proyecto.nombre.trim().charAt(0).toUpperCase() || "P"}
+            </span>
+            <div className="proyecto-titulo">
+              <h3>{proyecto.nombre}</h3>
+              <span className="proyecto-fecha">Registrado el {formatearFecha(proyecto.fecha_registro)}</span>
+            </div>
+          </div>
+
+          <p className="proyecto-ruta" title={proyecto.ruta_carpeta}>
+            {proyecto.ruta_carpeta}
+          </p>
+
+          <div className="chips">
+            {proyecto.lenguajes.map((lenguaje) => (
+              <span key={lenguaje} className={`chip chip-lang-${lenguaje.toLowerCase()}`}>
+                {lenguaje}
+              </span>
+            ))}
+            <span className="chip chip-modelo">{proyecto.modelo_ia}</span>
+          </div>
+
+          <div className="proyecto-acciones">
+            <Button onClick={() => onRevisar?.(proyecto)}>Revisar</Button>
+            <Button tamano="pequeno" variante="secundario" onClick={() => onEditar?.(proyecto)}>
+              Editar
+            </Button>
+            <Button tamano="pequeno" variante="peligro" onClick={() => onEliminar?.(proyecto)}>
+              Eliminar
+            </Button>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }

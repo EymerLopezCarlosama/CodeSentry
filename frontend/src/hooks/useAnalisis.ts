@@ -1,11 +1,9 @@
-// PROMPT — hooks/useAnalisis.ts
-//
-// Hook para lanzar y seguir un análisis: iniciar(idProyecto, objetivo, idArchivo?) crea la revisión y luego consulta GET /analisis/:id cada 2 s hasta que el estado sea "completado" o "fallido".
-// Expone { estado, progreso, error, iniciar }. Debe limpiar el intervalo al desmontar el componente.
+// Hook para lanzar y seguir un análisis: iniciar(idProyecto, objetivo, idArchivo?) crea la revisión y luego
+// consulta GET /analisis/:id cada 2 s hasta que el estado sea "completado" o "fallido".
+// Expone { idAnalisis, estado, progreso, error, iniciar, reiniciar }. Limpia el intervalo al desmontar.
 //
 // Depende de: services/revisiones.service.ts
 // Referencia: docs/api-contract.md (sección "Análisis") · HU-06
-// Hecho cuando: la barra de progreso se mueve sola mientras la IA analiza.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as revisionesService from "../services/revisiones.service";
@@ -84,5 +82,14 @@ export function useAnalisis() {
     [consultar, detener]
   );
 
-  return { idAnalisis, estado, progreso, error, iniciar };
+  // Vuelve al estado inicial (para "Nueva revisión" o reintentar tras un fallo)
+  const reiniciar = useCallback((): void => {
+    detener();
+    setError(null);
+    setEstado(null);
+    setIdAnalisis(null);
+    setProgreso({ procesados: 0, total: 0 });
+  }, [detener]);
+
+  return { idAnalisis, estado, progreso, error, iniciar, reiniciar };
 }

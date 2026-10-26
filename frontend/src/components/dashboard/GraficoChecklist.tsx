@@ -1,10 +1,4 @@
-// PROMPT — components/dashboard/GraficoChecklist.tsx
-//
-// Gráfico (recharts) de sugerencias pendientes / aceptadas / rechazadas. Props: checklist.
-// Componente de presentación: sin llamadas a la API (eso lo hacen hooks/pages). Props tipadas con TypeScript.
-// Referencia: HU-10
-
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { EstadoChecklist } from "../../types";
 
 interface GraficoChecklistProps {
@@ -20,13 +14,14 @@ const ETIQUETAS: Record<EstadoChecklist, string> = {
 };
 
 const COLORES: Record<EstadoChecklist, string> = {
-  pendiente: "#6b7785",
-  aceptada: "#16a34a",
-  rechazada: "#dc2626",
+  pendiente: "var(--color-texto-suave)",
+  aceptada: "var(--sev-baja)",
+  rechazada: "var(--sev-critica)",
 };
 
 export default function GraficoChecklist({ checklist }: GraficoChecklistProps) {
   const datos = ORDEN.map((estado) => ({
+    estado,
     nombre: ETIQUETAS[estado],
     total: checklist[estado],
     color: COLORES[estado],
@@ -39,19 +34,49 @@ export default function GraficoChecklist({ checklist }: GraficoChecklistProps) {
       {total === 0 ? (
         <p className="texto-suave">Aún no hay sugerencias para mostrar.</p>
       ) : (
-        <div className="grafico-contenedor">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={datos} dataKey="total" nameKey="nombre" innerRadius={50} outerRadius={85}>
-                {datos.map((d) => (
-                  <Cell key={d.nombre} fill={d.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <>
+          <div className="donut-contenedor">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={datos}
+                  dataKey="total"
+                  nameKey="nombre"
+                  innerRadius="62%"
+                  outerRadius="90%"
+                  paddingAngle={3}
+                  cornerRadius={6}
+                  stroke="none"
+                >
+                  {datos.map((d) => (
+                    <Cell key={d.estado} fill={d.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--color-superficie)",
+                    border: "1px solid var(--color-borde)",
+                    borderRadius: 10,
+                    color: "var(--color-texto)",
+                  }}
+                  itemStyle={{ color: "var(--color-texto-suave)" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-centro">
+              <strong>{total}</strong>
+              <span>sugerencias</span>
+            </div>
+          </div>
+          <ul className="leyenda">
+            {datos.map((d) => (
+              <li key={d.estado}>
+                <span className="leyenda-punto" style={{ background: d.color }} />
+                {d.nombre} ({d.total})
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
