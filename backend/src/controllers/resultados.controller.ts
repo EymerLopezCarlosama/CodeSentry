@@ -21,3 +21,12 @@ export async function listar(req: Request, res: Response, next: NextFunction): P
     next(err);
   }
 }
+
+export async function obtenerCodigo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const contexto = req.query.contexto === undefined ? undefined : Number(req.query.contexto);
+    res.status(200).json(await resultadosService.obtenerCodigo(Number(req.params.id), contexto));
+  } catch (err) {
+    next(err);
+  }
+}

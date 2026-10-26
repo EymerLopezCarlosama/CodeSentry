@@ -25,3 +25,19 @@ export const listarResultadosQuerySchema = z.object({
 });
 
 export type ListarResultadosQuery = z.infer<typeof listarResultadosQuerySchema>;
+
+export const idResultadoParamSchema = z.object({
+  id: z.coerce
+    .number({ invalid_type_error: "El id debe ser un número." })
+    .int("El id debe ser un entero.")
+    .positive("El id debe ser mayor que cero."),
+});
+
+export const codigoQuerySchema = z.object({
+  contexto: z.coerce
+    .number({ invalid_type_error: "El contexto debe ser un número." })
+    .int("El contexto debe ser un entero.")
+    .min(0, "El contexto no puede ser negativo.")
+    .max(30, "El contexto admite máximo 30 líneas.")
+    .optional(),
+});

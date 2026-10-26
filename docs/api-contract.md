@@ -82,6 +82,14 @@ Historial ordenado del más reciente al más antiguo. `graves` = hallazgos de se
 ```
 Hallazgos ordenados por severidad (critica → baja). Si el análisis no terminó: `archivos: []` y el `estado` real, no un error.
 Errores: `404 ANALISIS_NO_ENCONTRADO` · `400 DATOS_INVALIDOS` (id no numérico, o `severidad` fuera de baja/media/alta/critica).
+**GET `/resultados/:id/codigo?contexto=6`** → código alrededor de la línea de un hallazgo (solo lectura)
+```json
+{ "ruta_relativa": "src/app.ts", "lenguaje": "ts", "linea": 42, "desde": 36, "hasta": 48,
+  "total_lineas": 120, "linea_fuera_de_rango": false,
+  "lineas": [ { "numero": 36, "texto": "const q = ..." } ] }
+```
+`:id` es `id_resultado`. `contexto` = líneas a cada lado (0–30, por defecto 6). Lee el archivo del disco, así que muestra su contenido **actual**: si cambió desde el análisis, la línea puede no coincidir (`linea_fuera_de_rango: true` si ya no existe). Las líneas de más de 500 caracteres se recortan.
+Errores: `404 RESULTADO_NO_ENCONTRADO` · `404 ARCHIVO_NO_ENCONTRADO` · `400 RUTA_INVALIDA` (la ruta sale de la carpeta del proyecto) · `413 ARCHIVO_DEMASIADO_GRANDE` (más de 2 MB) · `400 DATOS_INVALIDOS`.
 
 ## Checklist (HU-09)
 | GET | `/analisis/:id/checklist` | Items con código afectado, recomendación y estado |

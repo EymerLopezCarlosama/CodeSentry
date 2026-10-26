@@ -36,15 +36,35 @@ export async function listarPorAnalisis(
   const [filas] = await pool.query<FilaHallazgo[]>(
     `SELECT a.ruta_relativa, r.id_resultado, r.tipo, r.severidad, r.linea_codigo,
             r.descripcion, COALESCE(e.nombre_estado, 'pendiente') AS estado_checklist
-     FROM Resultado r
-     JOIN Archivo a ON a.id_archivo = r.id_archivo
-     LEFT JOIN ChecklistItem c ON c.id_resultado = r.id_resultado
-     LEFT JOIN Estado e ON e.id_estado = c.id_estado
-     WHERE r.id_analisis = ? ${filtroSeveridad}
-     ORDER BY a.ruta_relativa,
+      FROM Resultado r
+      JOIN Archivo a ON a.id_archivo = r.id_archivo
+      LEFT JOIN ChecklistItem c ON c.id_resultado = r.id_resultado
+      LEFT JOIN Estado e ON e.id_estado = c.id_estado
+      WHERE r.id_analisis = ? ${filtroSeveridad}
+      ORDER BY a.ruta_relativa,
               FIELD(r.severidad, 'critica', 'alta', 'media', 'baja'),
               r.linea_codigo`,
     parametros
   );
   return filas;
+}
+
+export interface ContextoCodigo extends RowDataPacket {
+  ruta_carpeta: string;
+  ruta_relativa: string;
+  lenguaje: string;
+  linea_codigo: number;
+}
+
+// Datos para localizar en disco el código de un hallazgo.
+export async function obtenerContextoCodigo(idResultado: number): Promise<ContextoCodigo | null> {
+  const [filas] = await pool.query<ContextoCodigo[]>(
+    `SELECT p.ruta_carpeta, a.ruta_relativa, a.lenguaje, r.linea_codigo
+      FROM Resultado r
+      JOIN Archivo a ON a.id_archivo = r.id_archivo
+      JOIN Proyecto p ON p.id_proyecto = a.id_proyecto
+      WHERE r.id_resultado = ?`,
+    [idResultado]
+  );
+  return filas[0] ?? null;
 }
