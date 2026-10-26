@@ -1780,6 +1780,23 @@ legend {
   color: var(--color-primario);
 }
 
+.donut-contenedor .recharts-sector {
+  transition: fill-opacity var(--transicion);
+  outline: none;
+}
+
+.leyenda li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: default;
+  transition: background-color var(--transicion), color var(--transicion);
+}
+
+.leyenda li.activa {
+  background: var(--color-primario-suave);
+  color: var(--color-texto);
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,

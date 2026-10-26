@@ -1,4 +1,5 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useState } from "react";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import type { EstadoChecklist } from "../../types";
 
 interface GraficoChecklistProps {
@@ -20,6 +21,8 @@ const COLORES: Record<EstadoChecklist, string> = {
 };
 
 export default function GraficoChecklist({ checklist }: GraficoChecklistProps) {
+  const [activo, setActivo] = useState<EstadoChecklist | null>(null);
+
   const datos = ORDEN.map((estado) => ({
     estado,
     nombre: ETIQUETAS[estado],
@@ -27,6 +30,8 @@ export default function GraficoChecklist({ checklist }: GraficoChecklistProps) {
     color: COLORES[estado],
   }));
   const total = datos.reduce((suma, d) => suma + d.total, 0);
+  const seleccionado = datos.find((d) => d.estado === activo) ?? null;
+  const porcentaje = seleccionado && total > 0 ? Math.round((seleccionado.total / total) * 100) : 0;
 
   return (
     <div className="tarjeta">
@@ -47,30 +52,45 @@ export default function GraficoChecklist({ checklist }: GraficoChecklistProps) {
                   paddingAngle={3}
                   cornerRadius={6}
                   stroke="none"
+                  onMouseEnter={(_, indice) => setActivo(datos[indice]?.estado ?? null)}
+                  onMouseLeave={() => setActivo(null)}
                 >
                   {datos.map((d) => (
-                    <Cell key={d.estado} fill={d.color} />
+                    <Cell
+                      key={d.estado}
+                      fill={d.color}
+                      fillOpacity={activo === null || activo === d.estado ? 1 : 0.3}
+                    />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-superficie)",
-                    border: "1px solid var(--color-borde)",
-                    borderRadius: 10,
-                    color: "var(--color-texto)",
-                  }}
-                  itemStyle={{ color: "var(--color-texto-suave)" }}
-                />
               </PieChart>
             </ResponsiveContainer>
+
             <div className="donut-centro">
-              <strong>{total}</strong>
-              <span>sugerencias</span>
+              {seleccionado ? (
+                <>
+                  <strong>{seleccionado.total}</strong>
+                  <span>
+                    {seleccionado.nombre} · {porcentaje} %
+                  </span>
+                </>
+              ) : (
+                <>
+                  <strong>{total}</strong>
+                  <span>sugerencias</span>
+                </>
+              )}
             </div>
           </div>
+
           <ul className="leyenda">
             {datos.map((d) => (
-              <li key={d.estado}>
+              <li
+                key={d.estado}
+                className={activo === d.estado ? "activa" : undefined}
+                onMouseEnter={() => setActivo(d.estado)}
+                onMouseLeave={() => setActivo(null)}
+              >
                 <span className="leyenda-punto" style={{ background: d.color }} />
                 {d.nombre} ({d.total})
               </li>
