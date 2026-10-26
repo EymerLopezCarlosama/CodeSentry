@@ -149,3 +149,19 @@ export interface AnalisisResumen {
   hallazgos: number;
   graves: number; // severidad alta + crítica
 }
+
+export interface LineaCodigo {
+  numero: number;
+  texto: string;
+}
+
+export interface FragmentoCodigo {
+  ruta_relativa: string;
+  lenguaje: CodigoLenguaje;
+  linea: number; // línea del hallazgo
+  desde: number;
+  hasta: number;
+  total_lineas: number;
+  linea_fuera_de_rango: boolean; // el archivo cambió y ya no tiene esa línea
+  lineas: LineaCodigo[];
+}
