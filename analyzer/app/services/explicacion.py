@@ -8,10 +8,10 @@ Solo lectura.
 import re
 from collections.abc import Callable
 
+from app.prompts.analisis import construir_prompt
 from app.services import ollama_client
 from app.services.reglas import HallazgoRegla
 
-NOMBRES = {"js": "JavaScript", "ts": "TypeScript", "py": "Python"}
 CONTEXTO = 3  # líneas de código a cada lado de la marcada
 MAX_TOKENS = 110
 MAX_CARACTERES = 320
@@ -30,19 +30,6 @@ def fragmento(lineas: list[str], linea: int) -> str:
         marca = ">>" if n == linea else "  "
         filas.append(f"{marca} {n} | {lineas[n - 1]}")
     return "\n".join(filas)
-
-
-def construir_prompt(descripcion: str, codigo: str, lenguaje: str) -> str:
-    nombre = NOMBRES.get(lenguaje, lenguaje)
-    return (
-        f"Eres un revisor de código {nombre}. Un analizador estático encontró este problema en la línea "
-        "marcada con >>:\n"
-        f"Problema: {descripcion}\n\n"
-        f"Código:\n{codigo}\n\n"
-        "Explica en español, en máximo dos frases, qué ocurre exactamente en la línea marcada y cómo "
-        "corregirlo. Menciona los nombres reales que aparecen en el código. No repitas el código completo, "
-        "no uses listas ni formato Markdown."
-    )
 
 
 def limpiar(texto: str) -> str | None:
@@ -66,15 +53,16 @@ def explicar(
     lineas_codigo: list[str],
     lenguaje: str,
     modelo: str,
-    generar: Callable[..., str] = ollama_client.generar,
+    generar: Callable[..., str] | None = None,
 ) -> str:
     """Explicación del hallazgo, o su descripción fija si la IA no devuelve nada utilizable.
     OllamaNoDisponibleError se propaga a propósito: el que llama decide dejar de intentarlo."""
     if not 1 <= hallazgo.linea_codigo <= len(lineas_codigo):
         return hallazgo.descripcion
+    llamar = generar or ollama_client.generar
     prompt = construir_prompt(hallazgo.descripcion, fragmento(lineas_codigo, hallazgo.linea_codigo), lenguaje)
     try:
-        texto = generar(modelo, prompt, formato=None, max_tokens=MAX_TOKENS)
+        texto = llamar(modelo, prompt, formato=None, max_tokens=MAX_TOKENS)
     except ollama_client.OllamaNoDisponibleError:
         raise
     except ollama_client.OllamaError:

@@ -1,0 +1,62 @@
+== javascript/app.js
+  línea 12 sql-inyeccion (vulnerabilidad/alta) [IA, 5.7s]
+    let query = "SELECT * FROM users WHERE username = '" + username + "'";
+    -> En la línea marcada, el código está construyendo una consulta SQL concatenando directamente el valor del parámetro username a la cadena SQL. Esto permite una inyección SQL si el valor de username contiene caracteres especiales que alteren la consulta.
+  línea 23 eval (vulnerabilidad/critica) [IA, 5.2s]
+    return eval(userCode);
+    -> La línea marcada ejecuta dinámicamente el código proporcionado por el usuario a través de la función eval, lo que puede llevar a una ejecución arbitraria de código si los datos son externos.
+  línea 30 off-by-one (mala_practica/media) [IA, 6.0s]
+    for (let i = 0; i <= ratings.length; i++) {
+    -> En la línea marcada, el bucle usa <= para iterar sobre el arreglo ratings. Esto causa un error de desbordamiento porque la última iteración intenta acceder a un índice que no existe, ya que los índices de los arreglos en JavaScript comienzan en 0 y terminan en length - 1.
+  línea 35 division-longitud (mala_practica/baja) [IA, 5.1s]
+    return total / ratings.length;
+    -> En la línea marcada, se intenta dividir la variable total entre ratings.length, lo que podría causar una división por cero si ratings está vacío, lo que resulta en NaN o Infinity. Para corregir esto, se debe verificar que ratings.length no sea cero antes de realizar la división.
+  línea 40 octal (mala_practica/baja) [IA, 5.4s]
+    const storedPin = 00123; // Octal representation issue in strict mode or loose check
+    -> En la línea marcada, el número 00123 se interpreta como un número octal debido al cero a la izquierda. Esto puede causar problemas en el código, especialmente en modo estricto de JavaScript o con comparaciones suaves.
+  línea 42 igualdad-laxa (mala_practica/baja) [IA, 4.8s]
+    if (inputPin == "00123") {
+    -> En la línea marcada, el código compara inputPin con la cadena "00123" usando el operador ==, lo que puede causar problemas de coerción de tipos. Para corregirlo, debe usar el operador === para una comparación estricta que no aplique coerción de tipos.
+  línea 51 ruta-concatenada (vulnerabilidad/alta) [IA, 6.2s]
+    const fullPath = "/var/www/uploads/" + filePath;
+    -> En la línea marcada, el código concatena un valor externo filePath con una ruta base fija "/var/www/uploads/", lo que puede permitir un ataque de inyección de ruta (path traversal) si filePath contiene secuencias como ../../.
+== python/vulnerable_service.py
+  línea 17 cmd-shell (vulnerabilidad/critica) [IA, 6.2s]
+    return subprocess.check_output(command, shell=True)
+    -> En la línea marcada, se ejecuta un comando con shell=True, lo que permite la inyección de comandos si host_ip contiene entradas externas no seguras. Para corregir esto, se deben pasar los argumentos del comando como una lista y establecer shell=False.
+  línea 25 deserializacion (vulnerabilidad/alta) [IA, 4.9s]
+    return pickle.loads(session_data)
+    -> En la línea marcada, el código está utilizando pickle.loads para deserializar datos que provienen de fuera, lo cual es inseguro porque pickle puede ejecutar código arbitrario. Para corregir esto, se debe usar json.loads en su lugar, ya que json no ejecuta código.
+  línea 36 sql-inyeccion (vulnerabilidad/alta) [IA, 6.1s]
+    query = f"SELECT * FROM users WHERE email = '{email}'"
+    -> En la línea marcada, se está construyendo una consulta SQL directamente con el valor de la variable email usando una interpolación de cadenas. Esto permite una inyección SQL si el valor de email es proporcionado por el usuario. Para corregirlo, se debe usar una consulta parametrizada, que evita la inyección SQL.
+  línea 42 default-mutable (mala_practica/media) [IA, 5.1s]
+    def add_event_log(event_name: str, logs: list = []):
+    -> En la línea marcada, el problema es que la lista logs es un argumento por defecto mutable, lo que significa que si se modifica, la lista se compartirá entre todas las llamadas a la función.
+  línea 55 open-sin-with (mala_practica/media) [IA, 5.8s]
+    f = open(filename, "r")
+    -> En la línea marcada, el archivo se abre con la función open() sin el uso del contexto with, lo que significa que el archivo puede quedar abierto si ocurre un error antes de que se cierre explícitamente.
+  línea 63 variable-no-definida (mala_practica/media) [IA, 4.8s]
+    print(f"Log status: {status_msg}")
+    -> En la línea marcada, status_msg puede no estar definida si la condición "ERROR" no está en content, lo que causa un error UnboundLocalError. Para corregirlo, inicializa status_msg antes de la condición con un valor predeterminado, como None o una cadena vacía.
+== typescript/userManager.ts
+  línea 18 any (refactorizacion/baja) [IA, 6.2s]
+    public processRawData(data: any): User {
+    -> En la línea marcada, el código está utilizando el tipo any para la variable data, lo que desactiva la comprobación de tipos de TypeScript. Esto significa que no se realiza ninguna validación para asegurar que data tenga las propiedades esperadas de un objeto User.
+  línea 28 null-find (mala_practica/media) [IA, 6.0s]
+    return user.email.length;
+    -> En la línea marcada, el código intenta acceder a la propiedad email de un objeto user que puede ser undefined si no se encuentra ningún usuario con el id proporcionado. Esto causará un error de tiempo de ejecución.
+  línea 34 secreto (vulnerabilidad/critica) [IA, 4.7s]
+    const HardcodedSecret = "sk_live_9876543210_super_secret_key";
+    -> En la línea marcada, el código contiene una clave secreta codificada directamente como una cadena de texto. Esto es una vulnerabilidad de seguridad. Para corregirlo, se debe mover la clave a una variable de entorno o a un gestor de secretos, y utilizar una variable para referirse a ella en el código.
+  línea 41 bucle-infinito (mala_practica/alta) [IA, 4.4s]
+    while (i < items.length) {
+    -> En la línea marcada, el bucle while no incrementa la variable i, lo que causa un bucle infinito. Para corregirlo, se debe agregar i++ dentro del bucle para incrementar la variable y avanzar en la lista de elementos.
+  línea 48 any (refactorizacion/baja) [IA, 6.3s]
+    public mergeUserSettings(target: any, source: any): any {
+    -> En la línea marcada, el método mergeUserSettings utiliza dos parámetros de tipo any, lo que desactiva la comprobación de tipos y hace que el código sea vulnerable a la inyección de prototipos.
+  línea 51 prototipos (vulnerabilidad/alta) [IA, 5.6s]
+    target[key] = source[key];
+    -> En la línea marcada, se copian todas las propiedades del objeto source al objeto target usando un bucle for...in. Esto incluye las propiedades del prototipo de source, lo que puede contaminar el prototipo de target.
+
+19 hallazgos · 104s en total · 5.5s por hallazgo
