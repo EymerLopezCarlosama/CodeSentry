@@ -1,5 +1,6 @@
 import httpx
 import pytest
+import json
 
 from app.services.ollama_client import (
     ModeloNoInstaladoError,
@@ -45,3 +46,27 @@ def test_modelo_inexistente():
     with pytest.raises(ModeloNoInstaladoError) as e:
         generar("x", "hola", transport=_t(h))
     assert e.value.codigo == "MODELO_NO_INSTALADO" and e.value.status == 400
+    
+def test_generar_envia_opciones_y_keep_alive():
+    visto = {}
+
+    def h(req):
+        visto.update(json.loads(req.content))
+        return httpx.Response(200, json={"response": "ok"})
+
+    assert generar("m", "p", transport=_t(h), formato=None, max_tokens=80) == "ok"
+    assert "format" not in visto
+    assert visto["keep_alive"] == "15m"
+    assert visto["options"]["num_predict"] == 80 and visto["options"]["temperature"] == 0.0
+
+
+def test_generar_por_defecto_sigue_pidiendo_json_sin_tope():
+    visto = {}
+
+    def h(req):
+        visto.update(json.loads(req.content))
+        return httpx.Response(200, json={"response": "[]"})
+
+    generar("m", "p", transport=_t(h))
+    assert visto["format"] == "json"
+    assert "num_predict" not in visto["options"]
