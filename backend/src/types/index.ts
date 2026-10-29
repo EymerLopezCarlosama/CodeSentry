@@ -102,6 +102,7 @@ export interface AnalisisRespuesta {
   modelo_ia_usado: string;
   fecha_analisis: string;
   progreso: Progreso;
+  explicaciones_ia?: number | null; // null = no se conoce (por ejemplo, tras reiniciar el backend)
 }
 
 export interface Hallazgo {
@@ -116,6 +117,7 @@ export interface Hallazgo {
 export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
   archivos: { ruta_relativa: string; hallazgos: Hallazgo[] }[];
+  explicaciones_ia?: number | null; // null = no se conoce (por ejemplo, tras reiniciar el backend)
 }
 
 export interface DashboardRespuesta {

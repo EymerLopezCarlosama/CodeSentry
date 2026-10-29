@@ -112,6 +112,7 @@ export interface Analisis {
   modelo_ia_usado: string;
   fecha_analisis: string;
   progreso: Progreso;
+  explicaciones_ia?: number | null;
 }
 
 // HU07: resultados de un análisis (docs/api-contract.md)
@@ -134,6 +135,7 @@ export interface ArchivoConHallazgos {
 export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
   archivos: ArchivoConHallazgos[];
+  explicaciones_ia?: number | null;
 }
 
 // HU08: reportes

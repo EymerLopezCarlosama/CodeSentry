@@ -1797,6 +1797,10 @@ legend {
   color: var(--color-texto);
 }
 
+.analisis-origen {
+  margin: 0 0 var(--espacio-3);
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -25,12 +25,16 @@ class Settings:
         default_factory=lambda: _lista("MODELOS_PERMITIDOS", "qwen2.5-coder,llama3")
     )
 
-    # Constantes fijas del contrato (docs/analyzer-contract.md)
-    TIMEOUT_ARCHIVO: int = 120  # segundos por archivo
-    TAMANO_BLOQUE: int = 200  # líneas por bloque
-    MAX_REINTENTOS: int = 3
-    ESCANEO_MAX_ARCHIVOS: int = 20000
-    ESCANEO_MAX_SEGUNDOS: int = 10
+    # Límites del escáner
+    ESCANEO_MAX_ARCHIVOS: int = 1000
+    ESCANEO_MAX_SEGUNDOS: float = 30.0
+
+    # Constantes fijas (docs/analyzer-contract.md)
+    TIMEOUT_ARCHIVO: int = 120  # segundos máximos por llamada a Ollama
+
+    # Explicaciones con IA
+    EXPLICACIONES_MAX: int = field(default_factory=lambda: int(os.getenv("EXPLICACIONES_MAX", "25")))
+    EXPLICACIONES_SEGUNDOS: int = 300  # presupuesto total de la fase de explicaciones
 
 
 settings = Settings()

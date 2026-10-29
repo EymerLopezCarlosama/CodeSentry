@@ -43,9 +43,31 @@ def listar_modelos(transport: httpx.BaseTransport | None = None) -> list[str]:
         raise OllamaError(str(e)) from e
 
 
-def generar(modelo: str, prompt: str, transport: httpx.BaseTransport | None = None) -> str:
-    """POST /api/generate (stream=false, format=json) -> texto de la respuesta."""
-    cuerpo = {"model": modelo, "prompt": prompt, "stream": False, "format": "json"}
+def generar(
+    modelo: str,
+    prompt: str,
+    transport: httpx.BaseTransport | None = None,
+    *,
+    formato: str | None = "json",
+    max_tokens: int | None = None,
+    temperatura: float = 0.0,
+    mantener: str = "15m",
+) -> str:
+    """POST /api/generate (stream=false). formato="json" fuerza JSON; None devuelve texto libre.
+    max_tokens acota la respuesta (evita generaciones que no terminan); temperatura 0 = resultado repetible;
+    mantener evita que el modelo se descargue de memoria entre un archivo y el siguiente."""
+    opciones: dict = {"temperature": temperatura, "seed": 1}
+    if max_tokens is not None:
+        opciones["num_predict"] = max_tokens
+    cuerpo: dict = {
+        "model": modelo,
+        "prompt": prompt,
+        "stream": False,
+        "keep_alive": mantener,
+        "options": opciones,
+    }
+    if formato:
+        cuerpo["format"] = formato
     try:
         with _cliente(settings.TIMEOUT_ARCHIVO, transport) as c:
             r = c.post("/api/generate", json=cuerpo)

@@ -15,6 +15,7 @@ export interface AnalisisDetalle {
   modelo_ia_usado: string;
   fecha_analisis: string;
   estado: EstadoAnalisis;
+  explicaciones_ia?: number | null;
 }
 
 /** Datos para armar la llamada al analyzer (ruta_base = Proyecto.ruta_carpeta). */

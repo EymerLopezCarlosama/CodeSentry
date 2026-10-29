@@ -3,21 +3,21 @@ from types import SimpleNamespace
 import pytest
 
 from app.schemas.analisis import EntradaAnalisis
-from app.services import analyzer, ollama_client
-
-VALIDO = '[{"tipo":"mala_practica","descripcion":"Usar const.","severidad":"baja","linea_codigo":1}]'
+from app.services import analyzer, explicacion, ollama_client
 
 
 @pytest.fixture(autouse=True)
 def _base(monkeypatch):
     analyzer._trabajos.clear()
     monkeypatch.setattr(ollama_client, "listar_modelos", lambda transport=None: ["qwen2.5-coder:latest"])
+    # por defecto la IA "no aporta": devuelve la descripción fija (nunca se llama a un Ollama real)
+    monkeypatch.setattr(explicacion, "explicar", lambda h, lineas, lenguaje, modelo: h.descripcion)
 
 
 @pytest.fixture
 def proyecto(tmp_path):
-    (tmp_path / "a.js").write_text("a\nb\nc")
-    (tmp_path / "b.py").write_text("x = 1")
+    (tmp_path / "a.js").write_text("eval(x);\nconst a = 1;")
+    (tmp_path / "b.py").write_text("subprocess.run(c, shell=True)")
     (tmp_path / "main.go").write_text("package main")
     return tmp_path
 
@@ -28,93 +28,162 @@ def _entrada(ruta, objetivo="carpeta", rel=None):
     )
 
 
-def _generar(monkeypatch, fn):
-    monkeypatch.setattr(ollama_client, "generar", fn)
+def _correr(ruta, objetivo="carpeta", rel=None):
+    return analyzer.consultar(analyzer.crear_trabajo(_entrada(ruta, objetivo, rel), sincrono=True))
 
 
-def test_completa_con_resultados_y_progreso(proyecto, monkeypatch):
-    _generar(monkeypatch, lambda modelo, prompt, transport=None: VALIDO)
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto), sincrono=True))
+def _ia(monkeypatch, fn):
+    monkeypatch.setattr(explicacion, "explicar", fn)
+
+
+def _ajustes(monkeypatch, maximo=25, segundos=300):
+    monkeypatch.setattr(
+        analyzer, "settings", SimpleNamespace(EXPLICACIONES_MAX=maximo, EXPLICACIONES_SEGUNDOS=segundos)
+    )
+
+
+def test_las_reglas_funcionan_sin_modelo(proyecto, monkeypatch):
+    monkeypatch.setattr(ollama_client, "listar_modelos", lambda transport=None: [])
+    s = _correr(proyecto)
     assert s.estado == "completado"
+    assert sorted((h.ruta_relativa, h.linea_codigo, h.tipo, h.severidad) for h in s.resultados) == [
+        ("a.js", 1, "vulnerabilidad", "critica"),
+        ("b.py", 1, "vulnerabilidad", "critica"),
+    ]
+    assert s.explicaciones_ia == 0
+    assert all(len(h.descripcion) > 20 for h in s.resultados)
     assert (s.progreso.procesados, s.progreso.total) == (2, 2)
-    assert sorted(h.ruta_relativa for h in s.resultados) == ["a.js", "b.py"]
     assert [o.ruta_relativa for o in s.omitidos] == ["main.go"]
 
 
-def test_json_invalido_reintenta_y_va_a_errores(proyecto, monkeypatch):
+def test_con_ollama_apagado_el_analisis_no_falla(proyecto, monkeypatch):
+    def apagado(transport=None):
+        raise ollama_client.OllamaNoDisponibleError("sin conexión")
+
+    monkeypatch.setattr(ollama_client, "listar_modelos", apagado)
+    s = _correr(proyecto)
+    assert s.estado == "completado" and len(s.resultados) == 2 and s.explicaciones_ia == 0
+
+
+def test_con_ia_la_explicacion_reemplaza_la_descripcion(proyecto, monkeypatch):
+    _ia(monkeypatch, lambda h, lineas, lenguaje, modelo: f"Explicación de la IA para {h.regla}.")
+    s = _correr(proyecto)
+    assert sorted(h.descripcion for h in s.resultados) == [
+        "Explicación de la IA para cmd-shell.",
+        "Explicación de la IA para eval.",
+    ]
+    assert s.explicaciones_ia == 2
+    assert (s.progreso.procesados, s.progreso.total) == (4, 4)  # 2 archivos + 2 explicaciones
+
+
+def test_si_ollama_se_cae_a_mitad_el_resto_usa_la_tabla(proyecto, monkeypatch):
     llamadas = []
-    _generar(monkeypatch, lambda m, p, transport=None: llamadas.append(p) or "esto no es json")
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto, "archivo", "a.js"), sincrono=True))
+
+    def falso(h, lineas, lenguaje, modelo):
+        llamadas.append(h.regla)
+        if len(llamadas) == 2:
+            raise ollama_client.OllamaNoDisponibleError("se cayó")
+        return "Explicación de la IA para la primera."
+
+    _ia(monkeypatch, falso)
+    s = _correr(proyecto)
+    por_archivo = {h.ruta_relativa: h.descripcion for h in s.resultados}
+    assert por_archivo["a.js"] == "Explicación de la IA para la primera."
+    assert por_archivo["b.py"] != por_archivo["a.js"] and len(por_archivo["b.py"]) > 20
+    assert s.explicaciones_ia == 1
+    assert (s.progreso.procesados, s.progreso.total) == (4, 4)
+
+
+def test_el_tope_explica_primero_lo_mas_grave(tmp_path, monkeypatch):
+    (tmp_path / "a.js").write_text("if (a == b) {}\neval(x);")  # línea 1: baja, línea 2: crítica
+    _ajustes(monkeypatch, maximo=1)
+    _ia(monkeypatch, lambda h, lineas, lenguaje, modelo: "Explicación de la IA.")
+    s = _correr(tmp_path)
+    por_linea = {h.linea_codigo: h.descripcion for h in s.resultados}
+    assert por_linea[2] == "Explicación de la IA."
+    assert por_linea[1] != "Explicación de la IA."
+    assert s.explicaciones_ia == 1
+    assert (s.progreso.procesados, s.progreso.total) == (2, 2)  # 1 archivo + 1 explicación
+
+
+def test_con_el_interruptor_en_cero_no_se_usa_la_ia(proyecto, monkeypatch):
+    def no_debe_llamarse(*args, **kwargs):
+        raise AssertionError("no debería usarse la IA")
+
+    _ajustes(monkeypatch, maximo=0)
+    monkeypatch.setattr(ollama_client, "listar_modelos", no_debe_llamarse)
+    _ia(monkeypatch, no_debe_llamarse)
+    s = _correr(proyecto)
+    assert s.estado == "completado" and len(s.resultados) == 2 and s.explicaciones_ia == 0
+
+
+def test_se_deja_la_ia_tras_tres_respuestas_inutiles_seguidas(tmp_path, monkeypatch):
+    (tmp_path / "a.js").write_text("\n".join(["eval(x);"] * 5))
+    llamadas = []
+
+    def inutil(h, lineas, lenguaje, modelo):
+        llamadas.append(1)
+        return h.descripcion
+
+    _ia(monkeypatch, inutil)
+    s = _correr(tmp_path)
     assert len(llamadas) == 3
-    assert s.estado == "fallido"
-    assert "inválida" in s.errores[0].motivo
+    assert len(s.resultados) == 5 and s.explicaciones_ia == 0
+    assert s.progreso.procesados == s.progreso.total == 6
 
 
-def test_reintento_usa_prompt_estricto(proyecto, monkeypatch):
-    prompts = []
+def test_el_presupuesto_de_tiempo_corta_las_explicaciones(proyecto, monkeypatch):
+    def no_debe_llamarse(*args, **kwargs):
+        raise AssertionError("el presupuesto ya se agotó")
 
-    def fake(m, p, transport=None):
-        prompts.append(p)
-        return "basura" if len(prompts) == 1 else VALIDO
-
-    _generar(monkeypatch, fake)
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto, "archivo", "a.js"), sincrono=True))
-    assert s.estado == "completado" and len(s.resultados) == 1
-    assert "sin texto fuera del JSON" not in prompts[0]
-    assert "sin texto fuera del JSON" in prompts[1]
+    _ajustes(monkeypatch, segundos=-1)
+    _ia(monkeypatch, no_debe_llamarse)
+    s = _correr(proyecto)
+    assert s.estado == "completado" and len(s.resultados) == 2 and s.explicaciones_ia == 0
 
 
-def test_normalizacion(proyecto, monkeypatch):
-    envuelto = (
-        '{"hallazgos":['
-        '{"tipo":"vulnerabilidad","descripcion":"x","severidad":"alta","linea_codigo":999},'
-        '{"tipo":"raro","descripcion":"y","severidad":"alta","linea_codigo":1},'
-        '{"tipo":"mala_practica","descripcion":"z","severidad":"grave","linea_codigo":1}]}'
-    )
-    _generar(monkeypatch, lambda m, p, transport=None: envuelto)
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto, "archivo", "a.js"), sincrono=True))
-    assert len(s.resultados) == 1  # tipo y severidad desconocidos descartados
-    assert s.resultados[0].linea_codigo == 3  # 999 ajustado al total de líneas (3)
-
-
-def test_bloques_con_offset(tmp_path, monkeypatch):
-    (tmp_path / "c.py").write_text("x = 1\n" * 450)
-    prompts = []
-    _generar(monkeypatch, lambda m, p, transport=None: prompts.append(p) or "[]")
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(tmp_path, "archivo", "c.py"), sincrono=True))
+def test_un_archivo_ilegible_va_a_errores_y_el_resto_sigue(proyecto, monkeypatch):
+    (proyecto / "a.js").write_bytes(b"\xff\xfe\x00 no es utf-8")
+    s = _correr(proyecto)
     assert s.estado == "completado"
-    assert len(prompts) == 3
-    assert "201 | " in prompts[1] and "401 | " in prompts[2]
+    assert [(e.ruta_relativa, e.motivo) for e in s.errores] == [("a.js", "no se pudo leer el archivo")]
+    assert [h.ruta_relativa for h in s.resultados] == ["b.py"]
+
+
+def test_si_ningun_archivo_se_puede_leer_el_analisis_falla(tmp_path):
+    (tmp_path / "a.js").write_bytes(b"\xff\xfe\x00 no es utf-8")
+    s = _correr(tmp_path)
+    assert s.estado == "fallido" and s.resultados == []
+
+
+def test_objetivo_archivo_analiza_solo_ese(proyecto):
+    s = _correr(proyecto, "archivo", "b.py")
+    assert [h.ruta_relativa for h in s.resultados] == ["b.py"]
 
 
 def test_job_desconocido():
     with pytest.raises(analyzer.JobNoEncontradoError):
         analyzer.consultar("no-existe")
+        
+def test_el_total_inicial_reserva_los_pasos_de_ia(proyecto, monkeypatch):
+    monkeypatch.setattr(analyzer, "_ejecutar", lambda *args, **kwargs: None)
+    job = analyzer.crear_trabajo(_entrada(proyecto))
+    assert analyzer.consultar(job).progreso.total == 2 + analyzer.settings.EXPLICACIONES_MAX
+
+    monkeypatch.setattr(ollama_client, "listar_modelos", lambda transport=None: [])  # sin IA: no se reserva nada
+    job = analyzer.crear_trabajo(_entrada(proyecto))
+    assert analyzer.consultar(job).progreso.total == 2
 
 
-def test_modelo_no_instalado(proyecto, monkeypatch):
-    monkeypatch.setattr(ollama_client, "listar_modelos", lambda transport=None: [])
-    with pytest.raises(ollama_client.ModeloNoInstaladoError):
-        analyzer.crear_trabajo(_entrada(proyecto), sincrono=True)
+def test_el_porcentaje_no_retrocede_durante_las_explicaciones(proyecto, monkeypatch):
+    vistos = []
 
+    def espia(h, lineas, lenguaje, modelo):
+        p = next(iter(analyzer._trabajos.values())).progreso
+        vistos.append(p.procesados / p.total)
+        return "Explicación de la IA."
 
-def test_un_archivo_falla_y_el_resto_sigue(proyecto, monkeypatch):
-    def fake(m, p, transport=None):
-        if "Python" in p:
-            raise ollama_client.OllamaError("boom")
-        return VALIDO
-
-    _generar(monkeypatch, fake)
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto), sincrono=True))
-    assert s.estado == "completado"  # al menos uno se analizó
-    assert [e.ruta_relativa for e in s.errores] == ["b.py"]
-    assert len(s.resultados) == 1
-
-
-def test_tiempo_limite_por_archivo(proyecto, monkeypatch):
-    monkeypatch.setattr(
-        analyzer, "settings", SimpleNamespace(TIMEOUT_ARCHIVO=-1, TAMANO_BLOQUE=200, MAX_REINTENTOS=3)
-    )
-    s = analyzer.consultar(analyzer.crear_trabajo(_entrada(proyecto, "archivo", "a.js"), sincrono=True))
-    assert s.estado == "fallido"
-    assert "tiempo límite" in s.errores[0].motivo
+    _ia(monkeypatch, espia)
+    s = _correr(proyecto)
+    assert vistos == sorted(vistos) and vistos[0] > 0
+    assert s.progreso.procesados == s.progreso.total

@@ -51,6 +51,7 @@ class SalidaAnalisis(BaseModel):
     resultados: list[Hallazgo] = []
     omitidos: list[Omitido] = []
     errores: list[ErrorArchivo] = []
+    explicaciones_ia: int = 0
     
 class EntradaEscaneo(BaseModel):
     ruta_base: str = Field(min_length=1)

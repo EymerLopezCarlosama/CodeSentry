@@ -144,6 +144,15 @@ export default function Resultados() {
 
       {!cargando && !error && datos?.estado === "completado" && total > 0 && (
         <>
+          {datos.explicaciones_ia != null && (
+            <p className="analisis-origen">
+              <span className={`chip${datos.explicaciones_ia > 0 ? " chip-modelo" : ""}`}>
+                {datos.explicaciones_ia > 0
+                  ? `Explicaciones con IA local: ${datos.explicaciones_ia} de ${total}`
+                  : "Solo reglas: descripciones estándar"}
+              </span>
+            </p>
+          )}
           <div className="filtros-severidad" role="group" aria-label="Filtrar por severidad">
             {FILTROS.map((filtro) => {
               const cantidad = filtro.valor === "" ? total : conteos[filtro.valor];
