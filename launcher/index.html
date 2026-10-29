@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeSentry · Centro de arranque</title>
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+<div class="brillo"></div>
+<main class="card">
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+    <path d="M24 4 6 11v12c0 11 7.5 18.5 18 21 10.5-2.5 18-10 18-21V11L24 4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="m16 24 6 6 11-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <h1>CodeSentry</h1>
+  <p class="sub">Centro de arranque · todo corre en este equipo</p>
+  <section id="req"></section>
+  <ul id="lista"></ul>
+  <p id="mensaje"></p>
+  <button id="encender" class="boton grande">Encender todo</button>
+  <div class="acciones">
+    <button id="entrar" class="boton" disabled>Entrar a CodeSentry</button>
+    <button id="apagar" class="boton sec">Apagar todo</button>
+  </div>
+</main>
+
+<dialog id="dlg"></dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
