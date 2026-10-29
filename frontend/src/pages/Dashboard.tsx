@@ -7,6 +7,7 @@ import Loader from "../components/common/Loader";
 import GraficoChecklist from "../components/dashboard/GraficoChecklist";
 import GraficoSeveridad from "../components/dashboard/GraficoSeveridad";
 import KpiCards from "../components/dashboard/KpiCards";
+import Bienvenida from "../components/layout/Bienvenida";
 import EncabezadoPagina from "../components/layout/EncabezadoPagina";
 import * as dashboardService from "../services/dashboard.service";
 import * as revisionesService from "../services/revisiones.service";
@@ -83,6 +84,8 @@ export default function Dashboard() {
       <EncabezadoPagina titulo="Dashboard" descripcion={DESCRIPCION}>
         <Button onClick={() => navigate("/proyectos/nuevo")}>Nuevo proyecto</Button>
       </EncabezadoPagina>
+
+      <Bienvenida />
 
       <KpiCards datos={datos} />
 

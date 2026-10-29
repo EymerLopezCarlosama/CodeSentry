@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
+import { useUsuario } from "./hooks/useUsuario";
 import { api } from "./services/api";
 import type { Salud } from "./types";
 
 const INTERVALO_SALUD_MS = 30000;
 
 export default function App() {
+  const { nombre } = useUsuario();
   const [salud, setSalud] = useState<Salud | null>(null);
   const [sinConexion, setSinConexion] = useState(false);
 
@@ -32,6 +34,10 @@ export default function App() {
       clearInterval(id);
     };
   }, []);
+
+  if (!nombre) {
+    return <Navigate to="/arranque" replace />;
+  }
 
   return (
     <div className="app">

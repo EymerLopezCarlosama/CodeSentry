@@ -31,3 +31,10 @@ const ETIQUETAS_ESTADO_ANALISIS: Record<string, string> = {
 export function etiquetaEstadoAnalisis(estado: string): string {
   return ETIQUETAS_ESTADO_ANALISIS[estado] ?? estado;
 }
+
+export function saludoPorHora(fecha: Date = new Date()): string {
+  const h = fecha.getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
