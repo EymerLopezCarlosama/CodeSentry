@@ -212,6 +212,7 @@ def test_fixture_vulnerable_service_py():
         ("sql-inyeccion", _linea(c, 'query = f"SELECT')),
         ("default-mutable", _linea(c, "def add_event_log")),
         ("open-sin-with", _linea(c, "f = open(filename")),
+        ("variable-no-definida", _linea(c, 'print(f"Log status')),
     }
     assert _hallazgos(c, "py") == esperado
 

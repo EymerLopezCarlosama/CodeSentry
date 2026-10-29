@@ -6,6 +6,7 @@ Solo lectura: nunca ejecuta ni modifica el código analizado.
 
 import re
 from dataclasses import dataclass
+from app.services.reglas_ast import variables_sin_definir
 
 JS = ("js", "ts")
 TODOS = ("js", "ts", "py")
@@ -92,6 +93,12 @@ TABLA: dict[str, tuple[str, str, str]] = {
         "mala_practica",
         "media",
         "El archivo se abre sin with: puede quedar abierto si ocurre un error. Use with open(...) as f.",
+    ),
+    "variable-no-definida": (
+        "mala_practica",
+        "media",
+        "La variable `{nombre}` solo se asigna en algunas ramas y se usa después: si no se cumple esa "
+        "condición, falla por variable sin definir. Inicialícela antes de la condición.",
     ),
     "igualdad-laxa": (
         "mala_practica",
@@ -392,6 +399,8 @@ def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
     lineas = [linea if len(linea) <= MAX_LINEA else "" for linea in limpio.splitlines()]
 
     encontrados: set[tuple[str, int]] = set()
+    
+    # 1. Reglas de una sola línea
     for id_regla, lenguajes, patron, ignorar_cadenas in PATRONES:
         if lenguaje not in lenguajes:
             continue
@@ -400,10 +409,24 @@ def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
             if patron.search(texto):
                 encontrados.add((id_regla, numero))
 
-    encontrados |= _reglas_bloque_js(lineas) if lenguaje in JS else _reglas_bloque_py(lineas)
+    # 2. Reglas de bloque
+    if lenguaje in JS:
+        encontrados.update(_reglas_bloque_js(lineas))
+    elif lenguaje == "py":
+        encontrados.update(_reglas_bloque_py(lineas))
 
+    # 3. Construcción del resultado
     resultado: list[HallazgoRegla] = []
     for id_regla, numero in sorted(encontrados, key=lambda e: (e[1], e[0])):
         tipo, severidad, descripcion = TABLA[id_regla]
         resultado.append(HallazgoRegla(id_regla, tipo, severidad, numero, descripcion))
-    return resultado
+
+    # 4. Reglas AST de Python
+    if lenguaje == "py":
+        tipo, severidad, descripcion = TABLA["variable-no-definida"]
+        for numero, nombre in variables_sin_definir(codigo):
+            resultado.append(
+                HallazgoRegla("variable-no-definida", tipo, severidad, numero, descripcion.format(nombre=nombre))
+            )
+
+    return sorted(resultado, key=lambda h: (h.linea_codigo, h.regla))
