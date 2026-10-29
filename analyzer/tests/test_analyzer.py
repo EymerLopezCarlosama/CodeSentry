@@ -164,3 +164,26 @@ def test_objetivo_archivo_analiza_solo_ese(proyecto):
 def test_job_desconocido():
     with pytest.raises(analyzer.JobNoEncontradoError):
         analyzer.consultar("no-existe")
+        
+def test_el_total_inicial_reserva_los_pasos_de_ia(proyecto, monkeypatch):
+    monkeypatch.setattr(analyzer, "_ejecutar", lambda *args, **kwargs: None)
+    job = analyzer.crear_trabajo(_entrada(proyecto))
+    assert analyzer.consultar(job).progreso.total == 2 + analyzer.settings.EXPLICACIONES_MAX
+
+    monkeypatch.setattr(ollama_client, "listar_modelos", lambda transport=None: [])  # sin IA: no se reserva nada
+    job = analyzer.crear_trabajo(_entrada(proyecto))
+    assert analyzer.consultar(job).progreso.total == 2
+
+
+def test_el_porcentaje_no_retrocede_durante_las_explicaciones(proyecto, monkeypatch):
+    vistos = []
+
+    def espia(h, lineas, lenguaje, modelo):
+        p = next(iter(analyzer._trabajos.values())).progreso
+        vistos.append(p.procesados / p.total)
+        return "Explicación de la IA."
+
+    _ia(monkeypatch, espia)
+    s = _correr(proyecto)
+    assert vistos == sorted(vistos) and vistos[0] > 0
+    assert s.progreso.procesados == s.progreso.total

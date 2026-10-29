@@ -25,7 +25,7 @@ export async function listar(
 
   // Si no terminó, se devuelve su estado real y ninguna lista (no es un error)
   if (analisis.estado !== "completado") {
-    return { estado: analisis.estado, archivos: [] };
+    return { estado: analisis.estado, archivos: [], explicaciones_ia: null };
   }
 
   // El repositorio ya los entrega ordenados por archivo y por severidad
@@ -48,6 +48,7 @@ export async function listar(
 
   return {
     estado: "completado",
+    explicaciones_ia: analisis.explicaciones_ia ?? null,
     archivos: [...porArchivo].map(([ruta_relativa, hallazgos]) => ({ ruta_relativa, hallazgos })),
   };
 }

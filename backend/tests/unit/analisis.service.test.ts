@@ -111,6 +111,32 @@ describe("analisis.service", () => {
     expect(estadosGuardados()).toEqual(["en_proceso", "completado"]);
   });
 
+  it("guarda cuántas explicaciones redactó la IA", async () => {
+    vi.mocked(client.consultarTrabajo).mockResolvedValue({
+      ...salida("completado", 2, [hallazgo]),
+      explicaciones_ia: 1,
+    });
+    await correr(6);
+    vi.mocked(repo.obtenerPorId).mockResolvedValue({
+      id_analisis: 6,
+      modelo_ia_usado: "qwen2.5-coder",
+      fecha_analisis: "2026-10-28",
+      estado: "completado",
+      explicaciones_ia: 1,
+    });
+    expect((await obtener(6)).explicaciones_ia).toBe(1);
+  });
+
+  it("si no se conoce el dato, explicaciones_ia es null", async () => {
+    vi.mocked(repo.obtenerPorId).mockResolvedValue({
+      id_analisis: 77,
+      modelo_ia_usado: "qwen2.5-coder",
+      fecha_analisis: "2026-10-28",
+      estado: "completado",
+    });
+    expect((await obtener(77)).explicaciones_ia).toBeNull();
+  });
+
   it("obtener inexistente -> 404", async () => {
     vi.mocked(repo.obtenerPorId).mockResolvedValue(null);
     await expect(obtener(99)).rejects.toMatchObject({ status: 404, codigo: "ANALISIS_NO_ENCONTRADO" });

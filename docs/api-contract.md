@@ -58,8 +58,14 @@ Errores: `400 DATOS_INVALIDOS` (cuerpo mal formado, o `id_archivo` ausente/sobra
 ## Análisis (HU-06)
 **GET `/analisis/:id`** →
 ```json
-{ "id_analisis": 7, "estado": "en_proceso", "modelo_ia_usado": "qwen2.5-coder",
-  "fecha_analisis": "2026-10-04", "progreso": { "procesados": 3, "total": 12 } }
+{ 
+  "id_analisis": 7, 
+  "estado": "en_proceso", 
+  "modelo_ia_usado": "qwen2.5-coder",
+  "fecha_analisis": "2026-10-04", 
+  "progreso": { "procesados": 3, "total": 12 },
+  "explicaciones_ia": 12 
+}
 ```
 `estado`: `pendiente` · `en_proceso` · `completado` · `fallido`. El frontend consulta cada 2 s mientras no sea `completado`/`fallido`.
 `progreso` no se guarda en BD: el backend lo mantiene en memoria mientras corre el análisis.
@@ -75,10 +81,25 @@ Historial ordenado del más reciente al más antiguo. `graves` = hallazgos de se
 ## Resultados (HU-07)
 **GET `/analisis/:id/resultados?severidad=alta`** (filtro opcional) →
 ```json
-{ "estado": "completado",
-  "archivos": [ { "ruta_relativa": "src/app.ts",
-    "hallazgos": [ { "id_resultado": 31, "tipo": "vulnerabilidad", "severidad": "alta",
-      "linea_codigo": 42, "descripcion": "...", "estado_checklist": "pendiente" } ] } ] }
+{ 
+  "estado": "completado",
+  "explicaciones_ia": 12,
+  "archivos": [ 
+    { 
+      "ruta_relativa": "src/app.ts",
+      "hallazgos": [ 
+        { 
+          "id_resultado": 31, 
+          "tipo": "vulnerabilidad", 
+          "severidad": "alta",
+          "linea_codigo": 42, 
+          "descripcion": "...", 
+          "estado_checklist": "pendiente" 
+        } 
+      ] 
+    } 
+  ] 
+}
 ```
 Hallazgos ordenados por severidad (critica → baja). Si el análisis no terminó: `archivos: []` y el `estado` real, no un error.
 Errores: `404 ANALISIS_NO_ENCONTRADO` · `400 DATOS_INVALIDOS` (id no numérico, o `severidad` fuera de baja/media/alta/critica).

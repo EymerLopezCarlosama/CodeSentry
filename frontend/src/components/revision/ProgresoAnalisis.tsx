@@ -34,7 +34,7 @@ export default function ProgresoAnalisis({ estado, progreso }: ProgresoAnalisisP
       <div className="progreso-cabecera">
         <strong>{preparando ? "Preparando el análisis..." : ETIQUETAS[estado]}</strong>
         <span className="progreso-conteo">
-          {preparando ? "Detectando archivos..." : `${progreso.procesados} de ${progreso.total} archivos`}
+          {preparando ? "Detectando archivos..." : `${progreso.procesados} de ${progreso.total} pasos`}
         </span>
       </div>
 

@@ -9,6 +9,7 @@ const MAX_FALLOS_CONSULTA = 3;
 
 // El progreso no va a la BD (contrato): vive en memoria mientras corre el análisis.
 const progresos = new Map<number, Progreso>();
+const explicaciones = new Map<number, number>();
 const enEjecucion = new Set<number>();
 
 const dormir = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -59,6 +60,7 @@ export async function ejecutar(idAnalisis: number): Promise<void> {
       }
 
       progresos.set(idAnalisis, salida.progreso);
+      explicaciones.set(idAnalisis, salida.explicaciones_ia ?? 0);
       if (salida.estado === "en_proceso") continue;
 
       if (salida.estado === "fallido") {
@@ -89,7 +91,11 @@ export async function ejecutar(idAnalisis: number): Promise<void> {
 export async function obtener(id: number): Promise<AnalisisRespuesta> {
   const analisis = await repo.obtenerPorId(id);
   if (!analisis) throw new AppError(404, "ANALISIS_NO_ENCONTRADO", "El análisis no existe.");
-  return { ...analisis, progreso: progresos.get(id) ?? { procesados: 0, total: 0 } };
+  return {
+    ...analisis,
+    progreso: progresos.get(id) ?? { procesados: 0, total: 0 },
+    explicaciones_ia: explicaciones.get(id) ?? null,
+  };
 }
 
 export async function listar(filtros: {

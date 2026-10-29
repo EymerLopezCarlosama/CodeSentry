@@ -100,9 +100,10 @@ def _ejecutar(job_id: str, entrada: EntradaAnalisis, archivos: list[str], usar_i
                 job.progreso.procesados += 1
 
         a_explicar = min(len(pendientes), settings.EXPLICACIONES_MAX) if usar_ia else 0
+        with _lock:
+            # el total reservado al crear el trabajo se ajusta al número real: el porcentaje nunca baja
+            job.progreso.total = len(archivos) + a_explicar
         if a_explicar > 0:
-            with _lock:
-                job.progreso.total += a_explicar
             try:
                 _explicar(job, pendientes, entrada.modelo)
             except Exception:
@@ -142,11 +143,14 @@ def crear_trabajo(entrada: EntradaAnalisis, sincrono: bool = False) -> str:
         entrada.ruta_base, entrada.objetivo, entrada.ruta_relativa, list(entrada.lenguajes)
     )
     usar_ia = _ia_disponible(entrada.modelo)
+    reservados = settings.EXPLICACIONES_MAX if usar_ia else 0  # pasos de IA que se reservan de entrada
 
     job_id = uuid.uuid4().hex[:12]
     with _lock:
         _trabajos[job_id] = SalidaAnalisis(
-            estado="en_proceso", progreso=Progreso(procesados=0, total=len(archivos)), omitidos=omitidos
+            estado="en_proceso",
+            progreso=Progreso(procesados=0, total=len(archivos) + reservados),
+            omitidos=omitidos,
         )
     if sincrono:
         _ejecutar(job_id, entrada, archivos, usar_ia)

@@ -27,6 +27,7 @@ export interface SalidaTrabajo {
   resultados: HallazgoAnalyzer[];
   omitidos: { ruta_relativa: string; motivo: string }[];
   errores: { ruta_relativa: string; motivo: string }[];
+  explicaciones_ia?: number;
 }
 
 export interface ListaModelos {
