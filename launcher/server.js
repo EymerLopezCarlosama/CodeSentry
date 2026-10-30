@@ -24,7 +24,7 @@ const SERVICIOS = {
 const PROCESOS = {
   backend:  { cwd: path.join(RAIZ, "backend"),  shell: "npm run dev", requiere: path.join(RAIZ, "backend", "node_modules") },
   frontend: { cwd: path.join(RAIZ, "frontend"), shell: "npm run dev", requiere: path.join(RAIZ, "frontend", "node_modules") },
-  analyzer: { cwd: path.join(RAIZ, "analyzer"), archivo: PYTHON, args: ["-m", "uvicorn", "app.main:app", "--port", "8000", "--reload"], requiere: PYTHON },
+  analyzer: { cwd: path.join(RAIZ, "analyzer"), archivo: PYTHON, args: ["-m", "uvicorn", "app.main:app", "--port", "8000"], requiere: PYTHON },
   ollama:   { cwd: RAIZ, archivo: () => ollamaExe(), args: ["serve"] },
 };
 
