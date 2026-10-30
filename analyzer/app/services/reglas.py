@@ -32,6 +32,31 @@ TABLA: dict[str, tuple[str, str, str]] = {
         "Credencial o clave escrita directamente en el código. Muévala a una variable de entorno o a un "
         "gestor de secretos y rótela.",
     ),
+        "conexion-credenciales": (
+        "vulnerabilidad",
+        "critica",
+        "Usuario y contraseña de una base de datos escritos en el código (cadena o parámetros de conexión). "
+        "Cualquiera con acceso al repositorio puede usarlos. Léalos de variables de entorno, no los suba a "
+        "git y rote la contraseña.",
+    ),
+    "conexion-sin-password": (
+        "vulnerabilidad",
+        "alta",
+        "La conexión a la base de datos usa una contraseña vacía: cualquiera que alcance el servidor puede "
+        "entrar. Asigne una contraseña y léala de una variable de entorno.",
+    ),
+    "multiples-sentencias": (
+        "vulnerabilidad",
+        "media",
+        "multipleStatements permite ejecutar varias sentencias SQL en una sola consulta: si existe una "
+        "inyección, el atacante puede encadenar DROP o UPDATE. Desactívelo y use consultas parametrizadas.",
+    ),
+    "conexion-sin-cifrar": (
+        "vulnerabilidad",
+        "media",
+        "La conexión a la base de datos se configura sin cifrado TLS (ssl desactivado): credenciales y datos "
+        "viajan en texto plano. Actívelo, sobre todo si la base no está en este mismo equipo.",
+    ),
     "sql-inyeccion": (
         "vulnerabilidad",
         "alta",
@@ -256,6 +281,58 @@ _ANY = re.compile(r"(?::\s*any\b|\bas\s+any\b|<any>)")
 _MUTABLE = re.compile(r"\bdef\s+\w+\s*\([^)]*=\s*(?:\[\s*\]|\{\s*\}|set\(\s*\))")
 _OPEN = re.compile(r"^\s*\w+\s*=\s*open\s*\(")
 
+# --- SQL y conexiones a bases de datos ---
+# Llamadas que reciben una consulta armada por concatenación o interpolación (aunque el SQL no esté en la línea)
+_SQL_LLAMADA_JS = re.compile(
+    r"""(?:\b(?:query|execute|raw)|\$(?:query|execute)RawUnsafe)\s*\(\s*(?:"""
+    r"""`[^`]*\$\{|[^()]*["'`]\s*\+\s*[\w(]|[^()]*[\w)\]]\s*\+\s*["'`])"""
+)
+_SQL_LLAMADA_PY = re.compile(
+    r"""\b(?:execute|executemany|executescript|raw|read_sql|read_sql_query)\s*\(\s*(?:"""
+    r"""f["']|[^()]*\.format\s*\(|[^()]*["']\s*\+\s*[\w(]|[^()]*[\w)\]]\s*\+\s*["'])"""
+)
+
+# Credenciales dentro de una URI: mysql://usuario:clave@host (se ignoran los marcadores ${x}, {x}, %s, <x>)
+_URI_CREDENCIALES = re.compile(
+    r"""(?i)\b(?:mysql2?|mariadb|postgres(?:ql)?|mongodb(?:\+srv)?|rediss?|amqps?|mssql|sqlserver|oracle)"""
+    r"""://[^\s:/@"'`]+:(?![${%<\[])[^\s/@"'`]+@"""
+)
+# Cadenas estilo ODBC/JDBC: Server=x;Uid=sa;Pwd=clave;  o  jdbc:...?user=a&password=clave
+_CADENA_CONEXION = re.compile(
+    r"(?i)^(?=.*(?:\bjdbc:|\bserver\s*=|\bhost\s*=|\bdata\s+source\s*=|\bdatabase\s*=|\bdriver\s*=|\buid\s*=|\buser(?:\s+id)?\s*=))"
+    r""".*[;?&]\s*(?:password|pwd)\s*=\s*(?![${%<\[])[^&;\s"'`{]+"""
+)
+_SEQUELIZE = re.compile(
+    r"""\bnew\s+Sequelize\s*\(\s*["'][^"']+["']\s*,\s*["'][^"']+["']\s*,\s*["'][^"']+["']"""
+)
+_SSL_OFF = re.compile(
+    r"""\bssl\s*:\s*false\b|\bssl\s*=\s*False\b|\bssl_disabled\s*=\s*True\b|\buseSSL\s*[:=]\s*false\b"""
+    r"""|\bsslmode\s*=\s*["']?(?:disable|allow)\b"""
+)
+_MULTI = re.compile(r"\bmultipleStatements\s*:\s*true\b|\bMULTI_STATEMENTS\b")
+
+# Para las reglas de bloque
+_LLAMADA_CONEXION = re.compile(
+    r"\b(?:createConnection|createPool|createClient|MongoClient|create_engine|knex|"
+    r"(?:pymysql|MySQLdb|psycopg2?|asyncpg|aiomysql|pyodbc|pymssql|oracledb)\.(?:connect|create_pool)|"
+    r"connector\.connect|redis\.(?:Redis|StrictRedis)|new\s+(?:Pool|Client|Sequelize|Knex))\s*\("
+)
+_PASSWORD_LIT = re.compile(r"""(?i)\b(?:password|passwd|pwd|pass)\b["']?\s*[:=]\s*(["'])(.*?)\1""")
+_ACUM_RHS = "|".join(
+    [
+        r'''f"[^"]*\{''',
+        r"""f'[^']*\{""",
+        r"""`[^`]*\$\{""",
+        r'''"[^"]*"\s*\+\s*[A-Za-z_]''',
+        r"""'[^']*'\s*\+\s*[A-Za-z_]""",
+        r"""[A-Za-z_][\w.\[\]()]*\s*\+\s*["'`]""",
+    ]
+)
+_SQL_ACUM = re.compile(
+    rf"\b\w*(?:sql|query|consulta|stmt|statement)\w*\s*\+=\s*(?:{_ACUM_RHS})", re.IGNORECASE
+)
+_SQL_PISTA = re.compile(r"\b(?:SELECT\b|INSERT\s+INTO\b|UPDATE\s+\w+\s+SET\b|DELETE\s+FROM\b|WHERE\b)")
+
 # (id de la tabla, lenguajes, patrón, ignorar el contenido de las cadenas)
 PATRONES: list[tuple[str, tuple[str, ...], re.Pattern[str], bool]] = [
     ("eval", JS, _EVAL_JS, True),
@@ -278,6 +355,13 @@ PATRONES: list[tuple[str, tuple[str, ...], re.Pattern[str], bool]] = [
     ("any", ("ts",), _ANY, True),
     ("default-mutable", ("py",), _MUTABLE, False),
     ("open-sin-with", ("py",), _OPEN, False),
+    ("sql-inyeccion", JS, _SQL_LLAMADA_JS, False),
+    ("sql-inyeccion", ("py",), _SQL_LLAMADA_PY, False),
+    ("conexion-credenciales", TODOS, _URI_CREDENCIALES, False),
+    ("conexion-credenciales", TODOS, _CADENA_CONEXION, False),
+    ("conexion-credenciales", JS, _SEQUELIZE, False),
+    ("conexion-sin-cifrar", TODOS, _SSL_OFF, False),
+    ("multiples-sentencias", TODOS, _MULTI, False),
 ]
 
 # ---------------------------------------------------------------------------
@@ -381,6 +465,48 @@ def _reglas_bloque_py(lineas: list[str]) -> set[tuple[str, int]]:
             hallados.add(("bucle-infinito", idx + 1))
     return hallados
 
+def _fin_llamada(lineas: list[str], idx: int, maximo: int = 20) -> int:
+    """Índice de la línea donde se cierra el paréntesis de la llamada que abre la línea idx."""
+    profundidad = 0
+    abierto = False
+    limite = min(idx + maximo, len(lineas))
+    for j in range(idx, limite):
+        for ch in _sin_cadenas(lineas[j]):
+            if ch == "(":
+                profundidad += 1
+                abierto = True
+            elif ch == ")":
+                profundidad -= 1
+                if abierto and profundidad <= 0:
+                    return j
+    return limite - 1
+
+
+def _reglas_conexion(lineas: list[str]) -> set[tuple[str, int]]:
+    """Contraseña literal (o vacía) dentro de una llamada de conexión a base de datos."""
+    hallados: set[tuple[str, int]] = set()
+    for idx, linea in enumerate(lineas):
+        if not _LLAMADA_CONEXION.search(_sin_cadenas(linea)):
+            continue
+        for j in range(idx, _fin_llamada(lineas, idx) + 1):
+            m = _PASSWORD_LIT.search(lineas[j])
+            if not m:
+                continue
+            valor = m.group(2)
+            if valor == "":
+                hallados.add(("conexion-sin-password", j + 1))
+            elif not valor.startswith(("$", "{", "%", "<")):
+                hallados.add(("conexion-credenciales", j + 1))
+    return hallados
+
+
+def _reglas_sql_acumulado(lineas: list[str]) -> set[tuple[str, int]]:
+    """sql += "..." + valor, cuando unas líneas antes hay SQL: la consulta se arma por partes."""
+    hallados: set[tuple[str, int]] = set()
+    for idx, linea in enumerate(lineas):
+        if _SQL_ACUM.search(linea) and any(_SQL_PISTA.search(p) for p in lineas[max(0, idx - 30) : idx]):
+            hallados.add(("sql-inyeccion", idx + 1))
+    return hallados
 
 # ---------------------------------------------------------------------------
 # API
@@ -414,6 +540,12 @@ def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
         encontrados.update(_reglas_bloque_js(lineas))
     elif lenguaje == "py":
         encontrados.update(_reglas_bloque_py(lineas))
+    encontrados.update(_reglas_conexion(lineas))
+    encontrados.update(_reglas_sql_acumulado(lineas))
+
+    # Una credencial de conexión es más específica que "secreto": no se duplica en la misma línea
+    for regla, numero in [e for e in encontrados if e[0] == "conexion-credenciales"]:
+        encontrados.discard(("secreto", numero))
 
     # 3. Construcción del resultado
     resultado: list[HallazgoRegla] = []
