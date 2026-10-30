@@ -44,11 +44,22 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
   const [copiado, setCopiado] = useState<"si" | "no" | null>(null);
   const tarjeta = useRef<HTMLElement>(null);
 
-  // Al llegar por un enlace directo, baja hasta la tarjeta
+  // Al cambiar 'resaltado', asegura que el visor se abra
+  useEffect(() => {
+    if (resaltado) {
+      setAbierto(true);
+    }
+  }, [resaltado]);
+
+  // Al llegar por un enlace directo, espera al montado en el DOM y baja hasta la tarjeta
   useEffect(() => {
     if (!resaltado) return;
-    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    tarjeta.current?.scrollIntoView({ behavior: reducido ? "auto" : "smooth", block: "center" });
+    const timer = setTimeout(() => {
+      const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      tarjeta.current?.scrollIntoView({ behavior: reducido ? "auto" : "smooth", block: "center" });
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [resaltado]);
 
   // Carga el código al abrir (y otra vez si cambia el nivel o se reintenta)

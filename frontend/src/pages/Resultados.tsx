@@ -172,7 +172,13 @@ export default function Resultados() {
             })}
           </div>
 
-          <ResultadoTable archivos={archivosVisibles} idAnalisis={idAnalisis} idResaltado={idResaltado} />
+          <ResultadoTable
+            key={severidad}
+            archivos={archivosVisibles}
+            idAnalisis={idAnalisis}
+            idResaltado={idResaltado}
+            filtrado={severidad !== ""}
+          />
         </>
       )}
     </section>

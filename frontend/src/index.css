@@ -1801,6 +1801,35 @@ legend {
   margin: 0 0 var(--espacio-3);
 }
 
+.resultados-barra { display: flex; align-items: center; gap: .9rem; margin-bottom: .6rem; }
+.resultados-resumen { margin-right: auto; opacity: .7; font-size: .9rem; }
+.enlace-boton { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: .88rem; color: inherit; text-decoration: underline; text-underline-offset: 3px; opacity: .85; }
+.enlace-boton:hover:not(:disabled) { opacity: 1; }
+.enlace-boton:disabled { opacity: .35; cursor: default; text-decoration: none; }
+
+.archivo-cabecera { margin: 0; }
+.archivo-toggle { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .7rem .9rem; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
+.archivo-toggle:hover { background: rgba(127, 127, 127, .12); }
+.archivo-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.archivo-flecha { width: 1rem; flex: none; opacity: .7; }
+.archivo-toggle .archivo-ruta { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.archivo-grupo.abierto .hallazgos-lista { margin-top: .5rem; }
+
+.hallazgo.resaltado {
+  outline: 2px solid #22d3ee;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
+  animation: destello-resaltado 2s ease-out;
+}
+
+@keyframes destello-resaltado {
+  0% {
+    background-color: rgba(34, 211, 238, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,
