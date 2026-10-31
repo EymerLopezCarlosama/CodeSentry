@@ -102,6 +102,7 @@ export interface AnalisisRespuesta {
   modelo_ia_usado: string;
   fecha_analisis: string;
   progreso: Progreso;
+  explicaciones_ia?: number | null; // null = no se conoce (por ejemplo, tras reiniciar el backend)
 }
 
 export interface Hallazgo {
@@ -116,6 +117,7 @@ export interface Hallazgo {
 export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
   archivos: { ruta_relativa: string; hallazgos: Hallazgo[] }[];
+  explicaciones_ia?: number | null; // null = no se conoce (por ejemplo, tras reiniciar el backend)
 }
 
 export interface DashboardRespuesta {
@@ -134,4 +136,34 @@ export interface DashboardRespuesta {
 export interface ProyectoDetalle extends Proyecto {
   estado: string;
   lenguajes: NombreLenguaje[];
+}
+
+// Historial de análisis (GET /analisis)
+export interface AnalisisResumen {
+  id_analisis: number;
+  id_proyecto: number;
+  proyecto: string;
+  tipo_objetivo: TipoObjetivo;
+  ruta_relativa: string | null;
+  fecha_analisis: string;
+  modelo_ia_usado: string;
+  estado: EstadoAnalisis;
+  hallazgos: number;
+  graves: number; // severidad alta + crítica
+}
+
+export interface LineaCodigo {
+  numero: number;
+  texto: string;
+}
+
+export interface FragmentoCodigo {
+  ruta_relativa: string;
+  lenguaje: CodigoLenguaje;
+  linea: number; // línea del hallazgo
+  desde: number;
+  hasta: number;
+  total_lineas: number;
+  linea_fuera_de_rango: boolean; // el archivo cambió y ya no tiene esa línea
+  lineas: LineaCodigo[];
 }

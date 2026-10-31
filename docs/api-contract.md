@@ -18,6 +18,14 @@ Códigos HTTP: 400 datos inválidos · 404 no existe · 409 conflicto · 502 ana
 | PUT | `/proyectos/:id` | Actualizar configuración (HU-03) |
 | DELETE | `/proyectos/:id` | Eliminar registro (HU-04) |
 
+**POST /proyectos/escanear** body `{ "ruta_carpeta": "D:\\Proyectos\\mi-api" }` → `200`
+```json
+{ "soportados": { "JavaScript": 42, "Python": 7 },
+  "no_soportados": { "Java": 12, "PHP": 3 },
+  "total_archivos": 190, "truncado": false }
+```
+Se llama antes de registrar el proyecto (no guarda nada). Solo lectura. `truncado: true` si la carpeta es enorme y el conteo es parcial. Errores: `400 RUTA_INEXISTENTE` · `400 DATOS_INVALIDOS` · `502` analyzer caído.
+
 **Proyecto (respuesta):**
 ```json
 { "id_proyecto": 1, "nombre": "Mi API", "ruta_carpeta": "D:\\Proyectos\\mi-api",
@@ -30,11 +38,12 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 **DELETE /proyectos/:id** → `204`. Solo borra el registro en BD (cascada a sus solicitudes), **nunca** archivos del disco. El frontend pide confirmación antes de llamar.
 
 ## Archivos del proyecto (apoyo a HU-05)
-| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.ts/.py) detectados, ignorando node_modules y .git |
+| GET | `/proyectos/:id/archivos` | Archivos soportados (.js/.jsx/.ts/.tsx/.py) detectados, ignorando node_modules y .git |
 |---|---|---|
 ```json
 [ { "id_archivo": 10, "nombre_archivo": "app.ts", "ruta_relativa": "src/app.ts", "lenguaje": "ts" } ]
 ```
+Errores: `404 PROYECTO_NO_ENCONTRADO` · `400 RUTA_INEXISTENTE` (la carpeta ya no existe). Cada llamada re-escanea la carpeta; los `id_archivo` se conservan.
 
 ## Revisiones (HU-05)
 **POST `/revisiones`** body:
@@ -44,25 +53,64 @@ Errores: `400 RUTA_INEXISTENTE` · `409 RUTA_DUPLICADA`.
 ```
 → `202`: `{ "id_solicitud": 5, "id_analisis": 7, "estado": "pendiente" }`
 Crea la SolicitudRevision y un Analisis en estado `pendiente`, y dispara el escaneo en segundo plano.
+Errores: `400 DATOS_INVALIDOS` (cuerpo mal formado, o `id_archivo` ausente/sobrante según el tipo) · `404 PROYECTO_NO_ENCONTRADO` · `400 ARCHIVO_INVALIDO` (el archivo no pertenece al proyecto o ya no existe) · `400 RUTA_INEXISTENTE` (la carpeta del proyecto ya no existe) · `400 SIN_ARCHIVOS_SOPORTADOS` (no hay `.js`, `.ts` ni `.py` para revisar).
 
 ## Análisis (HU-06)
 **GET `/analisis/:id`** →
 ```json
-{ "id_analisis": 7, "estado": "en_proceso", "modelo_ia_usado": "qwen2.5-coder",
-  "fecha_analisis": "2026-10-04", "progreso": { "procesados": 3, "total": 12 } }
+{ 
+  "id_analisis": 7, 
+  "estado": "en_proceso", 
+  "modelo_ia_usado": "qwen2.5-coder",
+  "fecha_analisis": "2026-10-04", 
+  "progreso": { "procesados": 3, "total": 12 },
+  "explicaciones_ia": 12 
+}
 ```
 `estado`: `pendiente` · `en_proceso` · `completado` · `fallido`. El frontend consulta cada 2 s mientras no sea `completado`/`fallido`.
 `progreso` no se guarda en BD: el backend lo mantiene en memoria mientras corre el análisis.
 
+**GET `/analisis?proyecto=1&limite=5`** (ambos filtros opcionales) →
+```json
+[ { "id_analisis": 7, "id_proyecto": 1, "proyecto": "Mi API", "tipo_objetivo": "carpeta",
+    "ruta_relativa": null, "fecha_analisis": "2026-10-04", "modelo_ia_usado": "qwen2.5-coder",
+    "estado": "completado", "hallazgos": 12, "graves": 3 } ]
+```
+Historial ordenado del más reciente al más antiguo. `graves` = hallazgos de severidad alta + crítica. `limite`: 1–100. Errores: `400 DATOS_INVALIDOS` (proyecto o límite no numéricos).
+
 ## Resultados (HU-07)
 **GET `/analisis/:id/resultados?severidad=alta`** (filtro opcional) →
 ```json
-{ "estado": "completado",
-  "archivos": [ { "ruta_relativa": "src/app.ts",
-    "hallazgos": [ { "id_resultado": 31, "tipo": "vulnerabilidad", "severidad": "alta",
-      "linea_codigo": 42, "descripcion": "...", "estado_checklist": "pendiente" } ] } ] }
+{ 
+  "estado": "completado",
+  "explicaciones_ia": 12,
+  "archivos": [ 
+    { 
+      "ruta_relativa": "src/app.ts",
+      "hallazgos": [ 
+        { 
+          "id_resultado": 31, 
+          "tipo": "vulnerabilidad", 
+          "severidad": "alta",
+          "linea_codigo": 42, 
+          "descripcion": "...", 
+          "estado_checklist": "pendiente" 
+        } 
+      ] 
+    } 
+  ] 
+}
 ```
 Hallazgos ordenados por severidad (critica → baja). Si el análisis no terminó: `archivos: []` y el `estado` real, no un error.
+Errores: `404 ANALISIS_NO_ENCONTRADO` · `400 DATOS_INVALIDOS` (id no numérico, o `severidad` fuera de baja/media/alta/critica).
+**GET `/resultados/:id/codigo?contexto=6`** → código alrededor de la línea de un hallazgo (solo lectura)
+```json
+{ "ruta_relativa": "src/app.ts", "lenguaje": "ts", "linea": 42, "desde": 36, "hasta": 48,
+  "total_lineas": 120, "linea_fuera_de_rango": false,
+  "lineas": [ { "numero": 36, "texto": "const q = ..." } ] }
+```
+`:id` es `id_resultado`. `contexto` = líneas a cada lado (0–30, por defecto 6). Lee el archivo del disco, así que muestra su contenido **actual**: si cambió desde el análisis, la línea puede no coincidir (`linea_fuera_de_rango: true` si ya no existe). Las líneas de más de 500 caracteres se recortan.
+Errores: `404 RESULTADO_NO_ENCONTRADO` · `404 ARCHIVO_NO_ENCONTRADO` · `400 RUTA_INVALIDA` (la ruta sale de la carpeta del proyecto) · `413 ARCHIVO_DEMASIADO_GRANDE` (más de 2 MB) · `400 DATOS_INVALIDOS`.
 
 ## Checklist (HU-09)
 | GET | `/analisis/:id/checklist` | Items con código afectado, recomendación y estado |

@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.schemas.analisis import EntradaAnalisis, JobCreado, SalidaAnalisis
-from app.services import analyzer, modelos, ollama_client
+from app.schemas.analisis import EntradaAnalisis, EntradaEscaneo, JobCreado, SalidaAnalisis, SalidaEscaneo
+from app.services import analyzer, escaner, modelos, ollama_client
 
 router = APIRouter()
 
@@ -41,3 +41,7 @@ def crear_analisis(entrada: EntradaAnalisis) -> JobCreado:
 @router.get("/analisis/{job_id}", response_model=SalidaAnalisis)
 def consultar_analisis(job_id: str) -> SalidaAnalisis:
     return analyzer.consultar(job_id)
+
+@router.post("/escaneo", response_model=SalidaEscaneo)
+def escanear(entrada: EntradaEscaneo) -> SalidaEscaneo:
+    return escaner.escanear_lenguajes(entrada.ruta_base)

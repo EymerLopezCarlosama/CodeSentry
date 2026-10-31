@@ -3,6 +3,9 @@ import * as proyectosRepository from "../repositories/proyectos.repository";
 import { ProyectoDetalle, ProyectoRespuesta } from "../types";
 import { ActualizarProyectoDatos, CrearProyectoDatos } from "../validators/proyectos.validator";
 import { existeCarpeta, normalizarRuta } from "../utils/paths";
+import type { Archivo } from "../types";
+import { escanear } from "./scanner.service";
+import * as analyzerClient from "./analyzer-client.service";
 
 function pendiente(funcion: string): never {
   throw new Error(`proyectos.service.${funcion}: pendiente de implementar`);
@@ -111,4 +114,30 @@ export async function eliminar(id: number): Promise<void> {
   if (filasBorradas === 0) {
     throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
   }
+}
+
+// HU05 (Jhon): archivos soportados del proyecto (re-escanea la carpeta)
+export type ArchivoRespuesta = Omit<Archivo, "id_proyecto">;
+
+export async function listarArchivos(id: number): Promise<ArchivoRespuesta[]> {
+  const proyecto = await proyectosRepository.obtenerPorId(id);
+  if (!proyecto) {
+    throw new AppError(404, "PROYECTO_NO_ENCONTRADO", "El proyecto no existe.");
+  }
+  const archivos = await escanear(proyecto.id_proyecto, proyecto.ruta_carpeta);
+  return archivos.map(({ id_archivo, nombre_archivo, ruta_relativa, lenguaje }) => ({
+    id_archivo,
+    nombre_archivo,
+    ruta_relativa,
+    lenguaje,
+  }));
+}
+
+/** Cuenta archivos por lenguaje de una carpeta, antes de registrar el proyecto (solo lectura). */
+export async function escanearLenguajes(rutaCarpeta: string) {
+  const ruta = normalizarRuta(rutaCarpeta);
+  if (!(await existeCarpeta(ruta))) {
+    throw new AppError(400, "RUTA_INEXISTENTE", "La carpeta no existe en este equipo.");
+  }
+  return analyzerClient.escanear(ruta);
 }

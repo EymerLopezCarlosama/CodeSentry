@@ -1,8 +1,10 @@
 import { useState } from "react"; // HU04
+import { useNavigate } from "react-router-dom";
 import Button from "../components/common/Button";
 import EmptyState from "../components/common/EmptyState";
 import Loader from "../components/common/Loader";
 import Modal from "../components/common/Modal"; // HU04
+import EncabezadoPagina from "../components/layout/EncabezadoPagina";
 import ProyectoForm from "../components/proyectos/ProyectoForm"; // HU03
 import ProyectoList from "../components/proyectos/ProyectoList";
 import { useProyectos } from "../hooks/useProyectos";
@@ -10,6 +12,7 @@ import type { DatosNuevoProyecto, Proyecto } from "../types"; // HU04 + HU03
 
 export default function Proyectos() {
   const { proyectos, cargando, error, recargar, eliminar, actualizar } = useProyectos(); // HU04 + HU03
+  const navigate = useNavigate();
 
   // HU04: proyecto pendiente de confirmar (null = modal cerrado)
   const [aEliminar, setAEliminar] = useState<Proyecto | null>(null);
@@ -42,7 +45,11 @@ export default function Proyectos() {
   if (aEditar) {
     return (
       <section>
-        <h1>Editar proyecto</h1>
+        <EncabezadoPagina titulo="Editar proyecto" descripcion={aEditar.nombre}>
+          <Button variante="secundario" onClick={() => setAEditar(null)}>
+            Cancelar
+          </Button>
+        </EncabezadoPagina>
         <ProyectoForm
           valoresIniciales={{
             nombre: aEditar.nombre,
@@ -53,24 +60,24 @@ export default function Proyectos() {
           onGuardar={guardarEdicion}
           textoBoton="Guardar cambios"
         />
-        <p>
-          <Button variante="secundario" onClick={() => setAEditar(null)}>
-            Cancelar
-          </Button>
-        </p>
       </section>
     );
   }
 
   return (
     <section>
-      <h1>Proyectos</h1>
+      <EncabezadoPagina
+        titulo="Proyectos"
+        descripcion="Las carpetas de código que CodeSentry revisa en tu equipo."
+      >
+        <Button onClick={() => navigate("/proyectos/nuevo")}>Nuevo proyecto</Button>
+      </EncabezadoPagina>
 
       {cargando && <Loader />}
 
       {!cargando && error && (
         <div className="tarjeta">
-          <p>{error}</p>
+          <p className="mensaje-error">{error}</p>
           <Button onClick={() => void recargar()}>Reintentar</Button>
         </div>
       )}
@@ -78,10 +85,19 @@ export default function Proyectos() {
       {!cargando && !error && proyectos.length === 0 && <EmptyState />}
 
       {!cargando && !error && proyectos.length > 0 && (
-        <ProyectoList proyectos={proyectos} onEditar={setAEditar} onEliminar={setAEliminar} />
+        <ProyectoList
+          proyectos={proyectos}
+          onEditar={setAEditar}
+          onEliminar={setAEliminar}
+          onRevisar={(proyecto) => navigate(`/revision?proyecto=${proyecto.id_proyecto}`)}
+        />
       )}
 
-      {errorEliminar && <p role="alert">{errorEliminar}</p>}
+      {errorEliminar && (
+        <div className="tarjeta" role="alert" style={{ marginTop: "var(--espacio-3)" }}>
+          <p className="mensaje-error">{errorEliminar}</p>
+        </div>
+      )}
 
       <Modal
         abierto={aEliminar !== null}

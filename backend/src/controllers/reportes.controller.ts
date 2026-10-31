@@ -1,8 +1,34 @@
-// PROMPT — reportes.controller.ts — Controlador de reportes (HU-08)
-//
-// generar (201 + { id_reporte, formato, ruta_archivo }), listar (200), descargar (res.download del archivo).
-//
-// Sin SQL ni reglas de negocio: extrae params/body ya validados, llama al service y responde con el status del contrato. Errores → next(err).
-//
-// Depende de: services del mismo dominio
-// Referencia: docs/api-contract.md (sección "Reportes") · tablas: Reporte, Resultado
+import { NextFunction, Request, Response } from "express";
+import * as reportesService from "../services/reportes.service";
+
+// POST /analisis/:id/reportes
+export async function generar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const reporte = await reportesService.generar(Number(req.params.id), req.body.formato);
+    res.status(201).json(reporte);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET /analisis/:id/reportes
+export async function listar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const reportes = await reportesService.listar(Number(req.params.id));
+    res.status(200).json(reportes);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET /reportes/:id/descargar
+export async function descargar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const reporte = await reportesService.descargar(Number(req.params.id));
+    res.download(reporte.ruta_archivo, (err) => {
+      if (err && !res.headersSent) next(err);
+    });
+  } catch (err) {
+    next(err);
+  }
+}

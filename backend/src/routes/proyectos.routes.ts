@@ -4,6 +4,7 @@ import { validate } from "../middlewares/validate";
 import {
   actualizarProyectoSchema,
   crearProyectoSchema,
+  escanearProyectoSchema,
   idParamSchema,
 } from "../validators/proyectos.validator";
 
@@ -22,3 +23,5 @@ proyectosRouter.put(
 );
 
 proyectosRouter.delete("/:id", validate({ params: idParamSchema }), controller.eliminar);
+proyectosRouter.get("/:id/archivos", validate({ params: idParamSchema }), controller.listarArchivos);
+proyectosRouter.post("/escanear", validate({ body: escanearProyectoSchema }), controller.escanear);

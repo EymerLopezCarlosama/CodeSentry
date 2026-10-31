@@ -1,0 +1,48 @@
+.arranque { position: fixed; inset: 0; display: grid; place-items: center; padding: 1rem; overflow: auto;
+  background: #0b1020; color: #e8ecf8; font-family: inherit; }
+.arranque-brillo { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(90px); opacity: .45;
+  background: radial-gradient(circle at 30% 30%, #6366f1, transparent 60%), radial-gradient(circle at 70% 70%, #06b6d4, transparent 60%);
+  animation: arranque-flota 14s ease-in-out infinite alternate; }
+@keyframes arranque-flota { to { transform: translate(8%, -6%) rotate(25deg) scale(1.1); } }
+
+.arranque-card { position: relative; width: min(520px, 100%); padding: 2rem; border-radius: 20px;
+  background: rgba(20, 26, 48, .72); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, .5); animation: arranque-entra .5s ease both; }
+@keyframes arranque-entra { from { opacity: 0; transform: translateY(14px); } }
+
+.arranque-logo { width: 54px; height: 54px; color: #67e8f9; display: block; margin: 0 auto 1rem; filter: drop-shadow(0 0 12px #22d3ee88); }
+
+.arranque-pasos { display: flex; justify-content: center; gap: 1.2rem; list-style: none; padding: 0; margin: 0 0 1.5rem; font-size: .8rem; color: #8b95b8; }
+.arranque-pasos li { display: flex; align-items: center; gap: .4rem; }
+.arranque-pasos span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #3b4468; font-size: .72rem; }
+.arranque-pasos .activo { color: #fff; }
+.arranque-pasos .activo span { background: linear-gradient(135deg, #6366f1, #06b6d4); border-color: transparent; }
+.arranque-pasos .hecho span { background: #16a34a; border-color: transparent; color: #fff; }
+
+.arranque-seccion { display: flex; flex-direction: column; gap: .8rem; animation: arranque-entra .35s ease both; }
+.arranque-seccion h1 { margin: 0; font-size: 1.6rem; text-align: center; }
+.arranque-seccion > p { margin: 0; text-align: center; color: #aab3d4; line-height: 1.5; }
+.arranque-seccion label { font-size: .85rem; color: #aab3d4; margin-top: .6rem; }
+.arranque-seccion input { padding: .8rem 1rem; border-radius: 12px; border: 1px solid #3b4468; background: #0f1530; color: #fff; font-size: 1rem; outline: none; }
+.arranque-seccion input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px #22d3ee33; }
+
+.arranque-boton { padding: .8rem 1.4rem; border: 0; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem; color: #fff;
+  background: linear-gradient(135deg, #6366f1, #06b6d4); transition: transform .15s, box-shadow .15s, opacity .15s; }
+.arranque-boton:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px #22d3ee44; }
+.arranque-boton:disabled { opacity: .4; cursor: not-allowed; }
+.arranque-boton.secundario { background: transparent; border: 1px solid #3b4468; }
+.arranque-boton.grande { padding: 1rem; font-size: 1.1rem; margin-top: .6rem; }
+.arranque-acciones { display: flex; gap: .8rem; justify-content: flex-end; margin-top: .4rem; }
+
+.arranque-lista { list-style: none; margin: .4rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.arranque-lista li { display: flex; align-items: center; gap: .9rem; padding: .75rem .9rem; border-radius: 12px;
+  background: #0f1530; border: 1px solid #262e52; animation: arranque-entra .4s ease both; }
+.arranque-lista small { display: block; color: #8b95b8; margin-top: .15rem; }
+.arranque-icono { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; font-weight: 700; }
+.arranque-lista .ok { border-color: #16a34a66; } .arranque-lista .ok .arranque-icono { background: #16a34a; }
+.arranque-lista .error { border-color: #dc262666; } .arranque-lista .error .arranque-icono { background: #dc2626; }
+.arranque-lista .aviso { border-color: #f59e0b66; } .arranque-lista .aviso .arranque-icono { background: #f59e0b; color: #1a1a1a; }
+.arranque-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #3b4468; border-top-color: #22d3ee; animation: arranque-gira .8s linear infinite; }
+@keyframes arranque-gira { to { transform: rotate(360deg); } }
+.arranque-ayuda { font-size: .85rem; color: #fca5a5; text-align: left !important; }
+.arranque-ayuda code { background: #0f1530; padding: .1rem .35rem; border-radius: 6px; }

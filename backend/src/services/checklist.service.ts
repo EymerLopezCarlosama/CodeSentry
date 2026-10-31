@@ -1,9 +1,40 @@
-// PROMPT — checklist.service.ts — Lógica de negocio de checklist (HU-09)
-//
-// listar: cada item con código afectado (ruta_relativa + linea_codigo), recomendación (descripcion del Resultado) y estado.
-// marcar: buscar el id_estado por nombre con contexto "checklist"; actualizar ChecklistItem.id_estado y fecha_marcado = hoy (NULL si vuelve a "pendiente"). Item inexistente → 404.
-//
-// Aquí viven las reglas. Errores: lanzar AppError(status, codigo, mensaje) con los códigos del contrato (error-handler.ts los convierte al JSON estándar).
-//
-// Depende de: repositories del mismo dominio, middlewares/error-handler.ts (AppError)
-// Referencia: docs/api-contract.md (sección "Checklist") · tablas: ChecklistItem, Resultado, Estado
+import { AppError } from "../middlewares/error-handler";
+import * as checklistRepository from "../repositories/checklist.repository";
+import type { ItemChecklistFila } from "../repositories/checklist.repository";
+import { EstadoChecklist } from "../types";
+
+// Fecha local de hoy en formato YYYY-MM-DD
+function hoy(): string {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+export async function listar(idAnalisis: number): Promise<ItemChecklistFila[]> {
+  return checklistRepository.listarPorAnalisis(idAnalisis);
+}
+
+export async function marcar(
+  idItem: number,
+  estado: EstadoChecklist
+): Promise<ItemChecklistFila> {
+  const item = await checklistRepository.obtenerPorId(idItem);
+  if (!item) {
+    throw new AppError(404, "CHECKLIST_NO_ENCONTRADO", "El elemento del checklist no existe.");
+  }
+
+  const idEstado = await checklistRepository.obtenerIdEstado(estado, "checklist");
+  if (idEstado === null) {
+    throw new AppError(500, "ESTADO_NO_ENCONTRADO", `No existe el estado '${estado}' en la base de datos.`);
+  }
+
+  const fecha = estado === "pendiente" ? null : hoy();
+  await checklistRepository.actualizarEstado(idItem, idEstado, fecha);
+
+  const actualizado = await checklistRepository.obtenerPorId(idItem);
+  if (!actualizado) {
+    throw new AppError(404, "CHECKLIST_NO_ENCONTRADO", "El elemento del checklist no existe.");
+  }
+  return actualizado;
+}
