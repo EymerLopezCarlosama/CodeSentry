@@ -152,7 +152,11 @@ La petición queda abierta mientras el diálogo esté visible (máximo 5 minutos
 ## Extensiones opcionales
 | POST | `/archivos/:id/documentacion` | HU-11 → `{ "contenido": "..." }` |
 |---|---|---|
-| POST | `/archivos/:id/pruebas` | HU-12 → `{ "framework": "jest", "contenido": "..." }` |
+| POST | `/archivos/:id/pruebas` | HU-12 → `{ "framework": "jest" \| "pytest", "contenido": "...", "archivo_sugerido": "calc.test.js", "aviso": null \| "..." }` |
+
+Solo lectura: devuelve el texto de las pruebas y no escribe nada en el proyecto. Tarda entre 20 y 130 s según el equipo.
+Errores: `404 ARCHIVO_NO_ENCONTRADO` · `404 ARCHIVO_INEXISTENTE` (ya no está en disco) · `400 ARCHIVO_VACIO` ·
+`502 OLLAMA_NO_DISPONIBLE` · `502 MODELO_NO_INSTALADO` · `502 RESPUESTA_INVALIDA` · `504 OLLAMA_TIEMPO_EXCEDIDO` · `504 ANALYZER_TIEMPO_EXCEDIDO`.
 
 ---
 ## Cambios al MER (v3)

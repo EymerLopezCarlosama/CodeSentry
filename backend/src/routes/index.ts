@@ -11,6 +11,7 @@ import { analisisRouter } from "./analisis.routes";
 import { reportesRouter } from "./reportes.routes";
 import { revisionesRouter } from "./revisiones.routes";
 import { resultadosRouter } from "./resultados.routes";
+import archivosRoutes from "./archivos.routes";
 
 export const routes = Router();
 
@@ -74,3 +75,4 @@ routes.use("/sistema", sistemaRouter);
 routes.use("/revisiones", revisionesRouter);
 routes.use(resultadosRouter);
 routes.use(reportesRouter);
+routes.use("/archivos", archivosRoutes);

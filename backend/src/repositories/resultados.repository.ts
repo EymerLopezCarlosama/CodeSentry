@@ -12,6 +12,7 @@ import { pool } from "../config/database";
 import type { EstadoChecklist, Severidad, TipoHallazgo } from "../types";
 
 export interface FilaHallazgo extends RowDataPacket {
+  id_archivo: number;
   ruta_relativa: string;
   id_resultado: number;
   tipo: TipoHallazgo;
@@ -21,7 +22,6 @@ export interface FilaHallazgo extends RowDataPacket {
   estado_checklist: EstadoChecklist;
 }
 
-// Hallazgos de un análisis, ordenados por archivo y por severidad (crítica → baja).
 export async function listarPorAnalisis(
   idAnalisis: number,
   severidad?: Severidad
@@ -34,7 +34,7 @@ export async function listarPorAnalisis(
   }
 
   const [filas] = await pool.query<FilaHallazgo[]>(
-    `SELECT a.ruta_relativa, r.id_resultado, r.tipo, r.severidad, r.linea_codigo,
+    `SELECT r.id_archivo, a.ruta_relativa, r.id_resultado, r.tipo, r.severidad, r.linea_codigo,
             r.descripcion, COALESCE(e.nombre_estado, 'pendiente') AS estado_checklist
       FROM Resultado r
       JOIN Archivo a ON a.id_archivo = r.id_archivo

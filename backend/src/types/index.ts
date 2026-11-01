@@ -116,7 +116,7 @@ export interface Hallazgo {
 
 export interface ResultadosAgrupados {
   estado: EstadoAnalisis;
-  archivos: { ruta_relativa: string; hallazgos: Hallazgo[] }[];
+  archivos: { id_archivo: number; ruta_relativa: string; hallazgos: Hallazgo[] }[];
   explicaciones_ia?: number | null; // null = no se conoce (por ejemplo, tras reiniciar el backend)
 }
 

@@ -55,6 +55,12 @@ const STATUS_PROPIOS: Record<string, number> = {
   RUTA_INEXISTENTE: 400,
   DESCARGA_NO_ENCONTRADA: 404,
   JOB_NO_ENCONTRADO: 404,
+  LENGUAJE_NO_SOPORTADO: 400,
+  ARCHIVO_FUERA_DE_RUTA: 400,
+  ARCHIVO_ILEGIBLE: 400,
+  ARCHIVO_VACIO: 400,
+  ARCHIVO_INEXISTENTE: 404,
+  OLLAMA_TIEMPO_EXCEDIDO: 504,
 };
 
 const MENSAJES: Record<string, string> = {
@@ -64,6 +70,13 @@ const MENSAJES: Record<string, string> = {
   RUTA_INEXISTENTE: "La ruta indicada no existe.",
   DESCARGA_NO_ENCONTRADA: "No hay una descarga registrada para ese modelo.",
   JOB_NO_ENCONTRADO: "El trabajo de análisis no existe en el analyzer.",
+  LENGUAJE_NO_SOPORTADO: "Solo se generan pruebas para archivos .js, .ts y .py.",
+  ARCHIVO_FUERA_DE_RUTA: "El archivo no está dentro de la carpeta del proyecto.",
+  ARCHIVO_ILEGIBLE: "No se pudo leer el archivo.",
+  ARCHIVO_VACIO: "El archivo está vacío, no hay nada que probar.",
+  ARCHIVO_INEXISTENTE: "El archivo ya no existe en la carpeta del proyecto.",
+  OLLAMA_TIEMPO_EXCEDIDO: "El modelo tardó demasiado en responder. Inténtalo de nuevo.",
+  RESPUESTA_INVALIDA: "El modelo no devolvió pruebas válidas. Inténtalo de nuevo.",
 };
 
 async function llamar<T>(
@@ -80,7 +93,10 @@ async function llamar<T>(
       body: cuerpo ? JSON.stringify(cuerpo) : undefined,
       signal: AbortSignal.timeout(timeoutMs),
     });
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.name === "TimeoutError") {
+      throw new AppError(504, "ANALYZER_TIEMPO_EXCEDIDO", "El analyzer tardó demasiado en responder.");
+    }
     throw new AppError(502, "ANALYZER_NO_DISPONIBLE", "El analyzer no responde. Verifica que esté encendido.");
   }
 
@@ -127,4 +143,21 @@ export async function consultarTrabajo(jobId: string): Promise<SalidaTrabajo> {
 export async function escanear(rutaBase: string): Promise<ResultadoEscaneo> {
   // El analyzer corta a los 10 s; damos margen para que responda con truncado: true.
   return (await llamar<ResultadoEscaneo>("POST", "/escaneo", { ruta_base: rutaBase }, 20_000)).datos;
+}
+
+export interface EntradaPruebas {
+  ruta_base: string;
+  ruta_relativa: string;
+  modelo: string;
+}
+
+export interface SalidaPruebas {
+  framework: "jest" | "pytest";
+  contenido: string;
+  aviso: string | null;
+}
+
+export async function generarPruebas(entrada: EntradaPruebas): Promise<SalidaPruebas> {
+  // Hasta 2 intentos de ~65 s cada uno en un equipo modesto: se deja margen.
+  return (await llamar<SalidaPruebas>("POST", "/pruebas", entrada, 250_000)).datos;
 }
