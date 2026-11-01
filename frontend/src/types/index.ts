@@ -127,6 +127,7 @@ export interface Hallazgo {
 }
 
 export interface ArchivoConHallazgos {
+  id_archivo: number;
   ruta_relativa: string;
   hallazgos: Hallazgo[];
 }
@@ -191,4 +192,17 @@ export interface FragmentoCodigo {
   total_lineas: number;
   linea_fuera_de_rango: boolean; // el archivo cambió y ya no tiene esa línea
   lineas: LineaCodigo[];
+}
+
+export interface ArchivoConHallazgos {
+  id_archivo: number;
+  ruta_relativa: string;
+  hallazgos: Hallazgo[];
+}
+
+export interface PruebasGeneradas {
+  framework: "jest" | "pytest";
+  contenido: string;
+  archivo_sugerido: string;
+  aviso: string | null;
 }

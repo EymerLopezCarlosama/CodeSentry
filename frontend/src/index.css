@@ -1830,6 +1830,15 @@ legend {
   }
 }
 
+.archivo-acciones { padding: 0 .9rem .5rem 2.5rem; }
+.pruebas-panel { margin-top: .6rem; border: 1px solid rgba(127, 127, 127, .35); border-radius: 10px; overflow: hidden; }
+.pruebas-cabecera { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; padding: .55rem .8rem; background: rgba(127, 127, 127, .12); }
+.pruebas-nombre { font-size: .85rem; }
+.pruebas-acciones { margin-left: auto; display: flex; gap: .4rem; }
+.pruebas-aviso { margin: 0; padding: .5rem .8rem; font-size: .85rem; background: rgba(245, 158, 11, .15); }
+.pruebas-codigo { margin: 0; padding: .8rem; max-height: 420px; overflow: auto; font-size: .8rem; line-height: 1.5; white-space: pre; tab-size: 2; }
+.pruebas-nota { display: block; padding: .4rem .8rem; opacity: .7; }
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,

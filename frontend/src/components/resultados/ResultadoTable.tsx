@@ -1,10 +1,11 @@
 // Hallazgos agrupados por archivo (colapsables) y ordenados por severidad (crítica primero), como
 // tarjetas con visor de código. Componente de presentación; solo guarda qué archivos están abiertos.
-// Referencia: HU-07
+// Referencia: HU-07, HU-12
 
 import { useEffect, useState } from "react";
 import HallazgoCard from "./HallazgoCard";
 import type { ArchivoConHallazgos, Severidad } from "../../types";
+import PruebasArchivo from "./PruebasArchivo";
 
 interface ResultadoTableProps {
   archivos: ArchivoConHallazgos[];
@@ -119,6 +120,12 @@ export default function ResultadoTable({
                 </span>
               </button>
             </h2>
+
+            {/* HU-12: Botón y panel de pruebas fuera del acordeón para que no se destruya al colapsar */}
+            <div className="archivo-acciones">
+              <PruebasArchivo idArchivo={archivo.id_archivo} rutaRelativa={archivo.ruta_relativa} />
+            </div>
+
             {abierto && (
               <div className="hallazgos-lista" id={idLista}>
                 {archivo.hallazgos.map((hallazgo) => (
