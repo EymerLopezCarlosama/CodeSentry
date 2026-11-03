@@ -154,5 +154,12 @@ Los errores `OLLAMA_NO_DISPONIBLE` y `MODELO_NO_INSTALADO` siguen siendo válido
 Consulta `GET /analisis/{job_id}` cada 2 s, actualiza `Analisis.id_estado`, y al terminar guarda cada elemento de `resultados` en `Resultado` y crea su `ChecklistItem` en estado `pendiente`.
 
 ## Extensiones opcionales
+`POST /documentacion` (HU-11): recibe `{ "ruta_base", "ruta_relativa", "modelo" }` y devuelve `{ "contenido": "..." }`.
 
-`POST /documentacion` (HU-11) y `POST /pruebas` (HU-12): reciben `{ "ruta_base", "ruta_relativa", "modelo" }` y devuelven `{ "contenido": "..." }`.
+`POST /pruebas` (HU-12): recibe `{ "ruta_base", "ruta_relativa", "modelo"? }` y devuelve
+`{ "framework": "jest" | "pytest", "contenido": "...", "aviso": null | "..." }`.
+Solo .js/.ts (Jest) y .py (PyTest). Archivos de más de 300 líneas se cortan y `aviso` lo indica.
+Errores (400): `RUTA_INEXISTENTE`, `ARCHIVO_INEXISTENTE`, `ARCHIVO_FUERA_DE_RUTA`, `LENGUAJE_NO_SOPORTADO`,
+`ARCHIVO_ILEGIBLE`, `ARCHIVO_VACIO`, `MODELO_NO_INSTALADO` · `503 OLLAMA_NO_DISPONIBLE` ·
+`504 OLLAMA_TIEMPO_EXCEDIDO` · `502 RESPUESTA_INVALIDA` (el modelo no devolvió pruebas tras 2 intentos).
+Tarda entre 20 y 70 s según el equipo: quien la llame necesita un timeout largo.

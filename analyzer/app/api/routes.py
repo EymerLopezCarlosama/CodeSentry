@@ -2,7 +2,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.schemas.analisis import EntradaAnalisis, EntradaEscaneo, JobCreado, SalidaAnalisis, SalidaEscaneo
-from app.services import analyzer, escaner, modelos, ollama_client
+from app.schemas.pruebas import EntradaPruebas, SalidaPruebas
+from app.services import analyzer, escaner, modelos, ollama_client, test_generator
 
 router = APIRouter()
 
@@ -45,3 +46,13 @@ def consultar_analisis(job_id: str) -> SalidaAnalisis:
 @router.post("/escaneo", response_model=SalidaEscaneo)
 def escanear(entrada: EntradaEscaneo) -> SalidaEscaneo:
     return escaner.escanear_lenguajes(entrada.ruta_base)
+
+@router.post("/pruebas", response_model=SalidaPruebas)
+def pruebas(entrada: EntradaPruebas):
+    try:
+        return test_generator.generar_pruebas(entrada)
+    except (test_generator.PruebasError, ollama_client.OllamaError) as e:
+        contenido = {"codigo": e.codigo}
+        if getattr(e, "mensaje", None):
+            contenido["mensaje"] = e.mensaje
+        return JSONResponse(status_code=e.status, content=contenido)

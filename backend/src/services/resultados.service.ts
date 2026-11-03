@@ -32,10 +32,10 @@ export async function listar(
   const filas = await resultadosRepository.listarPorAnalisis(idAnalisis, severidad);
 
   // Map conserva el orden en que se insertan las claves
-  const porArchivo = new Map<string, Hallazgo[]>();
+  const porArchivo = new Map<string, { id_archivo: number; hallazgos: Hallazgo[] }>();
   for (const fila of filas) {
-    const hallazgos = porArchivo.get(fila.ruta_relativa) ?? [];
-    hallazgos.push({
+    const grupo = porArchivo.get(fila.ruta_relativa) ?? { id_archivo: fila.id_archivo, hallazgos: [] };
+    grupo.hallazgos.push({
       id_resultado: fila.id_resultado,
       tipo: fila.tipo,
       severidad: fila.severidad,
@@ -43,15 +43,18 @@ export async function listar(
       descripcion: fila.descripcion,
       estado_checklist: fila.estado_checklist,
     });
-    porArchivo.set(fila.ruta_relativa, hallazgos);
+    porArchivo.set(fila.ruta_relativa, grupo);
   }
 
   return {
     estado: "completado",
     explicaciones_ia: analisis.explicaciones_ia ?? null,
-    archivos: [...porArchivo].map(([ruta_relativa, hallazgos]) => ({ ruta_relativa, hallazgos })),
-  };
-}
+    archivos: [...porArchivo].map(([ruta_relativa, grupo]) => ({
+      id_archivo: grupo.id_archivo,
+      ruta_relativa,
+      hallazgos: grupo.hallazgos,
+    })),
+  };}
 
 const MAX_BYTES_ARCHIVO = 2 * 1024 * 1024; // 2 MB
 const MAX_CARACTERES_LINEA = 500; // evita enviar una línea de JS minificado de 300 KB
