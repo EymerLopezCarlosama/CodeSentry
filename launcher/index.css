@@ -51,3 +51,22 @@ pre { margin: .6rem 0 0; padding: .6rem; max-height: 160px; overflow: auto; back
 .boton.grande { width: 100%; padding: 1rem; font-size: 1.1rem; }
 .acciones { display: flex; gap: .8rem; margin-top: .8rem; }
 .acciones .boton { flex: 1; }
+[hidden] { display: none !important; }
+.pasos { display: flex; justify-content: center; gap: 1.2rem; list-style: none; padding: 0; margin: 0 0 1.4rem; font-size: .8rem; color: #8b95b8; }
+.pasos li { display: flex; align-items: center; gap: .4rem; padding: 0; background: none; border: 0; border-radius: 0; }
+.pasos li span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #3b4468; font-size: .72rem; }
+.pasos .activo { color: #fff; }
+.pasos .activo span { background: linear-gradient(135deg, #6366f1, #06b6d4); border-color: transparent; }
+.pasos .hecho span { background: #16a34a; border-color: transparent; color: #fff; }
+.intro { text-align: center; color: #aab3d4; line-height: 1.5; margin: 0 0 1rem; }
+.msg { text-align: center; color: #aab3d4; min-height: 1.4rem; margin: .8rem 0; font-size: .9rem; }
+#form-nombre { display: flex; flex-direction: column; gap: .7rem; }
+#form-nombre label { font-size: .85rem; color: #aab3d4; }
+#form-nombre input { padding: .8rem 1rem; border-radius: 12px; border: 1px solid #3b4468; background: #0f1530; color: #fff; font-size: 1rem; outline: none; }
+#form-nombre input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px #22d3ee33; }
+.enlace { background: none; border: 0; padding: 0; color: #67e8f9; cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.fila-todo { display: flex; gap: .7rem; align-items: flex-start; padding: .7rem; border: 1px solid #262e52; border-radius: 10px; margin: .5rem 0; background: #0f1530; cursor: pointer; }
+.fila-todo input { margin-top: .3rem; }
+.fila-todo small { display: block; color: #8b95b8; margin-top: .25rem; line-height: 1.4; }
+.fila-todo .cmd { margin: .4rem 0 0; }
+dialog { max-height: 90vh; overflow: auto; }

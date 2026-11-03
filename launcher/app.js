@@ -6,28 +6,28 @@ const DETALLE = {
   frontend: "Interfaz web · puerto 5173",
   ollama: "Opcional: solo explica hallazgos con IA",
 };
+const PASOS = ["Bienvenida", "Configuración", "Arranque"];
 
-const lista = document.getElementById("lista");
-const mensaje = document.getElementById("mensaje");
-const btnEncender = document.getElementById("encender");
-const btnEntrar = document.getElementById("entrar");
-const btnApagar = document.getElementById("apagar");
-const reqBox = document.getElementById("req");
-const dlg = document.getElementById("dlg");
+const $ = (id) => document.getElementById(id);
+const lista = $("lista"), mensaje = $("mensaje"), btnEncender = $("encender"), btnEntrar = $("entrar"), btnApagar = $("apagar");
+const reqBox = $("req"), dlg = $("dlg"), pasosEl = $("pasos"), subEl = $("sub");
+const secciones = [$("paso-bienvenida"), $("paso-config"), $("paso-arranque")];
+const formNombre = $("form-nombre"), inputNombre = $("nombre"), btnNombre = $("btn-nombre"), errNombre = $("err-nombre");
+const btnTodo = $("configurar-todo"), btnContinuar = $("a-arranque"), btnVerificar = $("verificar"), msgConfig = $("msg-config");
 
 const abiertos = new Set();
 const abiertosReq = new Set();
 
-let encendiendo = false;
-let redirigiendo = false;
-let apagado = false;
-let ultimo = "";
-let requisitos = [];
-let logsReq = {};
-let faltanObl = false;
-let temporizadorReq = null;
+let paso = -1, nombre = "";
+let encendiendo = false, redirigiendo = false, apagado = false, ultimo = "";
+let requisitos = [], logsReq = {}, faltanObl = false, temporizadorReq = null, avanzando = false;
 
-const post = (ruta) => fetch(ruta, { method: "POST" }).catch(() => null);
+const post = (ruta, cuerpo) =>
+  fetch(ruta, {
+    method: "POST",
+    headers: cuerpo ? { "Content-Type": "application/json" } : undefined,
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+  }).catch(() => null);
 
 const el = (tag, clase, texto) => {
   const e = document.createElement(tag);
@@ -36,15 +36,93 @@ const el = (tag, clase, texto) => {
   return e;
 };
 
+const saludo = () => {
+  const h = new Date().getHours();
+  return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+};
+const destino = () => `${DESTINO}?usuario=${encodeURIComponent(nombre)}`;
+
+// ===== Pasos =====
+function pintarPasos() {
+  pasosEl.replaceChildren();
+  PASOS.forEach((texto, i) => {
+    const li = el("li", i === paso ? "activo" : i < paso ? "hecho" : "");
+    li.append(el("span", null, i < paso ? "✓" : String(i + 1)), texto);
+    pasosEl.append(li);
+  });
+}
+
+function irAPaso(n) {
+  paso = n;
+  avanzando = false;
+  secciones.forEach((s, i) => (s.hidden = i !== n));
+  pintarPasos();
+  subEl.replaceChildren();
+  if (nombre && n > 0) {
+    subEl.append(`${saludo()}, ${nombre} · `);
+    const cambiar = el("button", "enlace", "¿No eres tú?");
+    cambiar.onclick = () => { inputNombre.value = nombre; btnNombre.disabled = false; irAPaso(0); };
+    subEl.append(cambiar);
+  } else {
+    subEl.textContent = "Centro de arranque · todo corre en este equipo";
+  }
+  if (n === 0) inputNombre.focus();
+  if (n === 1) cargarRequisitos();
+  if (n === 2) { ultimo = ""; refrescar(); }
+}
+
+// ===== Paso 1: nombre =====
+inputNombre.oninput = () => (btnNombre.disabled = !inputNombre.value.trim());
+formNombre.onsubmit = async (e) => {
+  e.preventDefault();
+  const valor = inputNombre.value.trim();
+  if (!valor) return;
+  btnNombre.disabled = true;
+  errNombre.textContent = "";
+  const r = await post("/api/usuario", { nombre: valor });
+  if (r && r.ok) {
+    nombre = (await r.json()).nombre;
+    irAPaso(1);
+  } else {
+    errNombre.textContent = "No se pudo guardar el nombre. Inténtalo de nuevo.";
+    btnNombre.disabled = false;
+  }
+};
+
+// ===== Paso 2: configuración =====
+function seleccionable(r) {
+  if (!(r.estado === "falta" || r.estado === "error") || !r.puedeInstalar) return false;
+  if (!r.depende) return true;
+  const dep = requisitos.find((x) => x.id === r.depende);
+  return !dep || dep.estado === "ok" || seleccionable(dep);
+}
+
 async function cargarRequisitos() {
   clearTimeout(temporizadorReq);
-  try { requisitos = await (await fetch("/api/requisitos")).json(); } catch { return; }
+  if (paso !== 1) return;
+  try { requisitos = await (await fetch("/api/requisitos")).json(); }
+  catch { msgConfig.textContent = "No se pudieron comprobar los requisitos."; return; }
   logsReq = {};
   for (const id of abiertosReq) { try { logsReq[id] = await (await fetch(`/api/log/req_${id}`)).json(); } catch {} }
   faltanObl = requisitos.some((r) => r.obligatorio && r.estado !== "ok");
-  btnEncender.disabled = faltanObl;
   pintarRequisitos();
-  if (requisitos.some((r) => r.estado === "instalando")) temporizadorReq = setTimeout(cargarRequisitos, 2000);
+  actualizarConfig();
+  if (requisitos.some((r) => r.estado === "instalando" || r.estado === "en_cola")) temporizadorReq = setTimeout(cargarRequisitos, 2000);
+}
+
+function actualizarConfig() {
+  const pend = requisitos.filter((r) => r.estado !== "ok");
+  const ocupado = requisitos.some((r) => r.estado === "instalando" || r.estado === "en_cola");
+  btnTodo.hidden = !requisitos.some(seleccionable);
+  btnTodo.disabled = ocupado;
+  btnContinuar.disabled = faltanObl || ocupado;
+  btnContinuar.textContent = pend.length && !faltanObl ? "Continuar sin lo opcional" : "Continuar";
+  if (!pend.length) {
+    msgConfig.textContent = "Todo en orden. Pasando al arranque…";
+    if (!avanzando) { avanzando = true; setTimeout(() => paso === 1 && irAPaso(2), 900); }
+  } else if (ocupado) msgConfig.textContent = "Instalando… puede tardar varios minutos.";
+  else if (faltanObl) msgConfig.textContent = "Faltan requisitos obligatorios. Usa «Configurar todo» o hazlos a mano.";
+  else msgConfig.textContent = "Solo falta lo opcional (la IA local). Puedes instalarla o continuar sin ella.";
 }
 
 function pintarRequisitos() {
@@ -63,6 +141,8 @@ function pintarRequisitos() {
     const b = el("div", "botones");
     if (r.estado === "instalando") {
       b.append(el("i", "giro"), el("span", null, "Instalando… puede tardar varios minutos"));
+    } else if (r.estado === "en_cola") {
+      b.append(el("i", "giro"), el("span", null, "En cola: espera su turno"));
     } else {
       if (r.auto) {
         const i = el("button", "mini", "Instalar…");
@@ -90,16 +170,12 @@ function abrirDialogo(r, modo) {
   dlg.replaceChildren();
   const acciones = el("div", "acciones-dlg");
   if (modo === "auto") {
-    dlg.append(
-      el("h2", null, `Instalar: ${r.nombre}`), 
-      el("p", null, r.porque),
-      el("p", null, "Esto se ejecutará en tu equipo:"), 
-      el("code", "cmd", r.comando)
-    );
+    dlg.append(el("h2", null, `Instalar: ${r.nombre}`), el("p", null, r.porque),
+      el("p", null, "Esto se ejecutará en tu equipo:"), el("code", "cmd", r.comando));
     if (r.aviso) dlg.append(el("div", "aviso-dlg", r.aviso));
     dlg.append(el("p", null, "Solo se ejecuta ese comando, nada más. Si no quieres autorizarlo, puedes hacerlo tú a mano."));
     const ok = el("button", "boton", "Autorizar e instalar");
-    ok.onclick = async () => { dlg.close(); await fetch(`/api/instalar/${r.id}`, { method: "POST" }); cargarRequisitos(); };
+    ok.onclick = async () => { dlg.close(); await post(`/api/instalar/${r.id}`); cargarRequisitos(); };
     const man = el("button", "boton sec", "Lo haré yo manualmente");
     man.onclick = () => abrirDialogo(r, "manual");
     const no = el("button", "boton sec", "Cancelar");
@@ -128,6 +204,58 @@ function abrirDialogo(r, modo) {
   if (!dlg.open) dlg.showModal();
 }
 
+function abrirDialogoTodo() {
+  const sel = requisitos.filter(seleccionable);
+  if (!sel.length) return;
+  dlg.replaceChildren();
+  dlg.append(el("h2", null, "Configurar todo"),
+    el("p", null, "Se prepara lo que falta, en este orden. Solo se ejecuta lo que ves aquí, nada más:"));
+  const cajas = new Map();
+  for (const r of sel) {
+    const fila = el("label", "fila-todo");
+    const c = document.createElement("input");
+    c.type = "checkbox";
+    c.checked = r.obligatorio;
+    c.disabled = r.obligatorio;
+    cajas.set(r.id, c);
+    const cuerpo = el("div");
+    const t = el("strong", null, r.nombre + " ");
+    t.append(el("span", "etiqueta", r.obligatorio ? "Obligatorio" : "Opcional"));
+    cuerpo.append(t, el("small", null, r.porque), el("code", "cmd", r.comando));
+    if (r.aviso) cuerpo.append(el("small", null, r.aviso));
+    fila.append(c, cuerpo);
+    dlg.append(fila);
+  }
+  // Marcar el modelo marca Ollama; desmarcar Ollama desmarca el modelo.
+  for (const r of sel) {
+    cajas.get(r.id).onchange = () => {
+      const marcado = cajas.get(r.id).checked;
+      if (marcado && r.depende && cajas.has(r.depende)) cajas.get(r.depende).checked = true;
+      if (!marcado) for (const o of sel) if (o.depende === r.id) cajas.get(o.id).checked = false;
+    };
+  }
+  const aMano = requisitos.filter((r) => r.estado !== "ok" && r.obligatorio && !seleccionable(r));
+  if (aMano.length) dlg.append(el("div", "aviso-dlg", `Quedará pendiente (hazlo a mano): ${aMano.map((r) => r.nombre).join(", ")}.`));
+
+  const ok = el("button", "boton", "Autorizar e instalar");
+  ok.onclick = async () => {
+    const ids = sel.filter((r) => cajas.get(r.id).checked).map((r) => r.id);
+    dlg.close();
+    await post("/api/instalar-todo", { ids });
+    cargarRequisitos();
+  };
+  const no = el("button", "boton sec", "Cancelar");
+  no.onclick = () => dlg.close();
+  dlg.append(el("div", "acciones-dlg"));
+  dlg.lastChild.append(ok, no);
+  dlg.showModal();
+}
+
+btnTodo.onclick = abrirDialogoTodo;
+btnVerificar.onclick = cargarRequisitos;
+btnContinuar.onclick = () => irAPaso(2);
+
+// ===== Paso 3: arranque =====
 function pintar(servicios, logs) {
   lista.replaceChildren();
   for (const s of servicios) {
@@ -171,7 +299,7 @@ function pintar(servicios, logs) {
 }
 
 async function refrescar() {
-  if (apagado) return;
+  if (apagado || paso !== 2) return;
   let servicios;
   try { servicios = await (await fetch("/api/estado")).json(); } catch { return; }
 
@@ -189,11 +317,10 @@ async function refrescar() {
   if (encendiendo && listos && !redirigiendo) {
     redirigiendo = true;
     mensaje.textContent = "Todo listo. Entrando a CodeSentry…";
-    setTimeout(() => (location.href = DESTINO), 1200);
+    setTimeout(() => (location.href = destino()), 1200);
     return;
   }
-  if (faltanObl) mensaje.textContent = "Instala los requisitos obligatorios de arriba para poder encender CodeSentry.";
-  else if (conError) { encendiendo = false; mensaje.textContent = "Algo falló: abre el registro de la fila marcada, corrígelo y pulsa Iniciar."; }
+  if (conError) { encendiendo = false; mensaje.textContent = "Algo falló: abre el registro de la fila marcada, corrígelo y pulsa Iniciar."; }
   else if (encendiendo) mensaje.textContent = "Encendiendo servicios…";
   else if (listos) mensaje.textContent = "Todo está encendido.";
   else mensaje.textContent = "Pulsa «Encender todo» para arrancar los servicios.";
@@ -201,12 +328,12 @@ async function refrescar() {
 
 btnEncender.onclick = async () => {
   const r = await post("/api/iniciar-todo");
-  if (r && r.status === 409) { await cargarRequisitos(); return; }
+  if (r && r.status === 409) { irAPaso(1); return; }
   encendiendo = true; redirigiendo = false;
   setTimeout(refrescar, 300);
 };
 
-btnEntrar.onclick = () => (location.href = DESTINO);
+btnEntrar.onclick = () => (location.href = destino());
 
 btnApagar.onclick = async () => {
   if (!confirm("¿Apagar todos los servicios de CodeSentry?")) return;
@@ -218,6 +345,9 @@ btnApagar.onclick = async () => {
   btnEncender.disabled = btnEntrar.disabled = btnApagar.disabled = true;
 };
 
-cargarRequisitos();
-refrescar();
-setInterval(refrescar, 1500);
+// ===== Inicio =====
+(async function iniciar() {
+  try { nombre = (await (await fetch("/api/usuario")).json()).nombre || ""; } catch { nombre = ""; }
+  irAPaso(nombre ? 1 : 0);
+  setInterval(refrescar, 1500);
+})();

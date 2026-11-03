@@ -153,6 +153,7 @@ const MODELO = "qwen2.5-coder";
 const OLLAMA_WIN = path.join(process.env.LOCALAPPDATA || "", "Programs", "Ollama", "ollama.exe");
 const WINGET_FLAGS = "--silent --accept-package-agreements --accept-source-agreements";
 const instalando = new Set();
+const enCola = new Set();
 const fallosReq = new Map();
 let pyCmd = null;
 
@@ -320,7 +321,14 @@ async function listarRequisitos() {
   return ids.map((id) => {
     const d = REQ[id];
     const bloqueadoPor = d.depende && !hechos[d.depende] ? REQ[d.depende].nombre : null;
-    const estado = hechos[id] ? "ok" : instalando.has(id) ? "instalando" : fallosReq.has(id) ? "error" : "falta";
+    const estado = hechos[id] ? "ok" : instalando.has(id) ? "instalando" : enCola.has(id) ? "en_cola" : fallosReq.has(id) ? "error" : "falta";
+    return {
+      id, nombre: d.nombre, obligatorio: d.obligatorio, estado, porque: d.porque, aviso: d.aviso ?? null,
+      auto: d.auto, instalable: d.auto && (!d.usaWinget || winget) && !bloqueadoPor,
+      puedeInstalar: d.auto && (!d.usaWinget || winget), depende: d.depende ?? null,
+      bloqueadoPor, comando: d.comando ? d.comando() : null, manual: d.manual,
+      mensaje: fallosReq.get(id) ?? null,
+    };
     return {
       id, nombre: d.nombre, obligatorio: d.obligatorio, estado, porque: d.porque, aviso: d.aviso ?? null,
       auto: d.auto, instalable: d.auto && (!d.usaWinget || winget) && !bloqueadoPor,
@@ -330,24 +338,82 @@ async function listarRequisitos() {
   });
 }
 
-async function instalarReq(id) {
+// Valida y arranca la instalación de un requisito. `fin` se resuelve (true/false) cuando termina.
+async function lanzarInstalacion(id) {
   const d = REQ[id];
-  if (!d || !d.auto || instalando.has(id)) return 400;
-  if (d.depende && !(await REQ[d.depende].detectar())) return 409;
-  if (d.usaWinget && !(await ejecutar("winget --version")).ok) return 400;
+  if (!d || !d.auto || instalando.has(id)) return { codigo: 400 };
+  if (d.depende && !(await REQ[d.depende].detectar())) return { codigo: 409 };
+  if (d.usaWinget && !(await ejecutar("winget --version")).ok) return { codigo: 400 };
   instalando.add(id);
   fallosReq.delete(id);
   registros.set(`req_${id}`, []);
-  d.instalar()
+  const fin = d.instalar()
     .then(() => d.detectar())
-    .then((ok) => { if (!ok) fallosReq.set(id, "No se pudo completar. Abre el registro o hazlo manualmente."); })
-    .catch((e) => fallosReq.set(id, e.message))
+    .then((ok) => {
+      if (!ok) fallosReq.set(id, "No se pudo completar. Abre el registro o hazlo manualmente.");
+      return ok;
+    })
+    .catch((e) => { fallosReq.set(id, e.message); return false; })
     .finally(() => instalando.delete(id));
+  return { codigo: 202, fin };
+}
+
+async function instalarReq(id) {
+  return (await lanzarInstalacion(id)).codigo;
+}
+
+// "Configurar todo": instala en orden (el de REQ) solo los ids pedidos; si uno falla, se detiene.
+function instalarVarios(ids) {
+  if (enCola.size || instalando.size) return 409;
+  const orden = Object.keys(REQ).filter((id) => ids.includes(id) && REQ[id].auto);
+  if (!orden.length) return 400;
+  orden.forEach((id) => { enCola.add(id); fallosReq.delete(id); });
+  (async () => {
+    for (const id of orden) {
+      if (await REQ[id].detectar()) { enCola.delete(id); continue; }
+      const r = await lanzarInstalacion(id);
+      enCola.delete(id);
+      if (r.codigo !== 202) { fallosReq.set(id, "No se pudo iniciar. Hazlo manualmente."); break; }
+      if (!(await r.fin)) break;
+    }
+    orden.forEach((id) => enCola.delete(id));
+  })();
   return 202;
 }
 
 async function faltantesObligatorios() {
   return (await listarRequisitos()).filter((r) => r.obligatorio && r.estado !== "ok").map((r) => r.id);
+}
+
+// ===== NOMBRE DE USUARIO (se guarda en este equipo) =====
+const ARCHIVO_USUARIO = path.join(RAIZ, "storage", "usuario.json");
+
+function leerNombre() {
+  try { return String(JSON.parse(fs.readFileSync(ARCHIVO_USUARIO, "utf8")).nombre ?? ""); } catch { return ""; }
+}
+
+function guardarNombre(texto) {
+  const limpio = String(texto ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40);
+  if (!limpio) return null;
+  fs.mkdirSync(path.dirname(ARCHIVO_USUARIO), { recursive: true });
+  fs.writeFileSync(ARCHIVO_USUARIO, JSON.stringify({ nombre: limpio }), "utf8");
+  return limpio;
+}
+
+function leerJson(req, max = 4096) {
+  return new Promise((resolve) => {
+    let datos = "", excedido = false;
+    req.on("data", (c) => {
+      if (excedido) return;
+      datos += c;
+      if (datos.length > max) { excedido = true; resolve(null); }
+    });
+    req.on("end", () => {
+      if (excedido) return;
+      try { resolve(JSON.parse(datos || "{}")); } catch { resolve(null); }
+    });
+    req.on("error", () => resolve(null));
+  });
 }
 
 const HOSTS_OK = [`localhost:${PUERTO}`, `127.0.0.1:${PUERTO}`];
@@ -417,6 +483,21 @@ const servidor = http.createServer(async (req, res) => {
   const inst = ruta.match(/^\/api\/instalar\/(\w+)$/);
   if (req.method === "POST" && inst) {
     const codigo = await instalarReq(inst[1]);
+    return json(res, codigo, { ok: codigo === 202 });
+  }
+
+    if (req.method === "GET" && ruta === "/api/usuario") return json(res, 200, { nombre: leerNombre() });
+
+  if (req.method === "POST" && ruta === "/api/usuario") {
+    const cuerpo = await leerJson(req);
+    const nombre = cuerpo && guardarNombre(cuerpo.nombre);
+    return nombre ? json(res, 200, { nombre }) : json(res, 400, { error: "Escribe un nombre (máximo 40 caracteres)." });
+  }
+
+  if (req.method === "POST" && ruta === "/api/instalar-todo") {
+    const cuerpo = await leerJson(req);
+    const ids = Array.isArray(cuerpo?.ids) ? cuerpo.ids.filter((x) => typeof x === "string") : [];
+    const codigo = ids.length ? instalarVarios(ids) : 400;
     return json(res, codigo, { ok: codigo === 202 });
   }
   

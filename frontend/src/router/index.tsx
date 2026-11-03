@@ -1,7 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Analisis from "../pages/Analisis";
-import Arranque from "../pages/Arranque";
 import Checklist from "../pages/Checklist";
 import Dashboard from "../pages/Dashboard";
 import NuevoProyecto from "../pages/NuevoProyecto";
@@ -11,10 +10,6 @@ import Resultados from "../pages/Resultados";
 import Revision from "../pages/Revision";
 
 export const router = createBrowserRouter([
-  {
-    path: "/arranque",
-    element: <Arranque />,
-  },
   {
     path: "/",
     element: <App />,

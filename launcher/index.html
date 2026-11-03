@@ -14,15 +14,39 @@
     <path d="m16 24 6 6 11-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <h1>CodeSentry</h1>
-  <p class="sub">Centro de arranque · todo corre en este equipo</p>
-  <section id="req"></section>
-  <ul id="lista"></ul>
-  <p id="mensaje"></p>
-  <button id="encender" class="boton grande">Encender todo</button>
-  <div class="acciones">
-    <button id="entrar" class="boton" disabled>Entrar a CodeSentry</button>
-    <button id="apagar" class="boton sec">Apagar todo</button>
-  </div>
+  <p class="sub" id="sub"></p>
+  <ol class="pasos" id="pasos"></ol>
+
+  <section id="paso-bienvenida" class="paso" hidden>
+    <p class="intro">Análisis de calidad de código, 100 % local. Tu código nunca sale de este equipo.</p>
+    <form id="form-nombre">
+      <label for="nombre">¿Cómo te llamas?</label>
+      <input id="nombre" maxlength="40" autocomplete="off" placeholder="Tu nombre">
+      <p id="err-nombre" class="err"></p>
+      <button id="btn-nombre" class="boton grande" type="submit" disabled>Continuar</button>
+    </form>
+  </section>
+
+  <section id="paso-config" class="paso" hidden>
+    <p class="intro">Comprobamos que tu equipo tenga lo necesario. Lo que falte solo se instala si tú lo autorizas.</p>
+    <section id="req"></section>
+    <p id="msg-config" class="msg"></p>
+    <button id="configurar-todo" class="boton grande" hidden>Configurar todo…</button>
+    <div class="acciones">
+      <button id="verificar" class="boton sec">Verificar de nuevo</button>
+      <button id="a-arranque" class="boton" disabled>Continuar</button>
+    </div>
+  </section>
+
+  <section id="paso-arranque" class="paso" hidden>
+    <ul id="lista"></ul>
+    <p id="mensaje" class="msg"></p>
+    <button id="encender" class="boton grande">Encender todo</button>
+    <div class="acciones">
+      <button id="entrar" class="boton" disabled>Entrar a CodeSentry</button>
+      <button id="apagar" class="boton sec">Apagar todo</button>
+    </div>
+  </section>
 </main>
 
 <dialog id="dlg"></dialog>

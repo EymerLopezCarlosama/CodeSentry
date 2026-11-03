@@ -16,3 +16,4 @@ storage/reportes/*
 .idea/
 .DS_Store
 Thumbs.db
+storage/usuario.json
