@@ -17,7 +17,9 @@ import type { DatosArchivo } from "../repositories/proyectos.repository";
 import type { Archivo, CodigoLenguaje } from "../types";
 import { existeCarpeta, rutaRelativa } from "../utils/paths";
 
-const CARPETAS_IGNORADAS = new Set(["node_modules", ".git", "dist", "build", "__pycache__", ".venv"]);
+const CARPETAS_IGNORADAS = new Set([
+  "node_modules", ".git", "dist", "build", "__pycache__", ".venv", "tests", "__tests__", "fixtures",
+]);
 
 const LENGUAJE_POR_EXTENSION: Record<string, CodigoLenguaje> = {
   ".js": "js",
