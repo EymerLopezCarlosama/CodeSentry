@@ -113,6 +113,7 @@ def _ejecutar(job_id: str, entrada: EntradaAnalisis, archivos: list[str], usar_i
             job.resultados.extend(
                 Hallazgo(
                     ruta_relativa=p.ruta,
+                    regla=p.hallazgo.regla,
                     tipo=p.hallazgo.tipo,
                     severidad=p.hallazgo.severidad,
                     linea_codigo=p.hallazgo.linea_codigo,
