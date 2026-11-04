@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from app.services.reglas import PATRONES, TABLA, analizar
+from app.services.reglas import METADATOS, PATRONES, TABLA, analizar, catalogo
 
 RAIZ = Path(__file__).parent / "fixtures" / "vulnerable_codebase"
 
@@ -241,3 +241,15 @@ def test_codesentry_ignore_en_la_misma_linea_o_la_anterior():
     assert _hallazgos(c, "js") == {("eval", 4)}
     assert _hallazgos("eval(a); // codesentry-ignore: sql-inyeccion", "js") == {("eval", 1)}
     assert _hallazgos(_t("# codesentry-ignore", "x = eval(s)"), "py") == set()
+    
+def test_metadatos_cubren_toda_la_tabla():
+    assert set(METADATOS) == set(TABLA)
+    for cwe, iso in METADATOS.values():
+        assert cwe is None or cwe.startswith("CWE-")
+        assert iso in {"Seguridad", "Fiabilidad", "Mantenibilidad"}
+
+
+def test_catalogo_trae_una_entrada_por_regla():
+    c = catalogo()
+    assert len(c) == len(TABLA) and all(e["descripcion"] for e in c)
+    assert "{nombre}" not in str([e["descripcion"] for e in c])

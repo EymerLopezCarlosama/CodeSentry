@@ -148,6 +148,32 @@ TABLA: dict[str, tuple[str, str, str]] = {
     ),
 }
 
+# id -> (CWE o None, característica de ISO/IEC 25010)
+METADATOS: dict[str, tuple[str | None, str]] = {
+    "eval": ("CWE-95", "Seguridad"),
+    "cmd-shell": ("CWE-78", "Seguridad"),
+    "secreto": ("CWE-798", "Seguridad"),
+    "conexion-credenciales": ("CWE-798", "Seguridad"),
+    "conexion-sin-password": ("CWE-259", "Seguridad"),
+    "multiples-sentencias": ("CWE-89", "Seguridad"),
+    "conexion-sin-cifrar": ("CWE-319", "Seguridad"),
+    "sql-inyeccion": ("CWE-89", "Seguridad"),
+    "ruta-concatenada": ("CWE-22", "Seguridad"),
+    "prototipos": ("CWE-1321", "Seguridad"),
+    "deserializacion": ("CWE-502", "Seguridad"),
+    "tls-desactivado": ("CWE-295", "Seguridad"),
+    "hash-debil": ("CWE-327", "Seguridad"),
+    "bucle-infinito": ("CWE-835", "Fiabilidad"),
+    "off-by-one": ("CWE-193", "Fiabilidad"),
+    "null-find": ("CWE-476", "Fiabilidad"),
+    "open-sin-with": ("CWE-772", "Fiabilidad"),
+    "variable-no-definida": ("CWE-457", "Fiabilidad"),
+    "division-longitud": ("CWE-369", "Fiabilidad"),
+    "default-mutable": (None, "Fiabilidad"),
+    "igualdad-laxa": ("CWE-1025", "Mantenibilidad"),
+    "octal": (None, "Mantenibilidad"),
+    "any": (None, "Mantenibilidad"),
+}
 
 @dataclass(frozen=True)
 class HallazgoRegla:
@@ -584,3 +610,17 @@ def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
     resultado = [h for h in resultado if not (ignoradas.get(h.linea_codigo, set()) & {"*", h.regla})]
 
     return sorted(resultado, key=lambda h: (h.linea_codigo, h.regla))
+
+def catalogo() -> list[dict]:
+    """Catálogo público de reglas (lo usa GET /reglas)."""
+    return [
+        {
+            "id": regla,
+            "tipo": tipo,
+            "severidad": severidad,
+            "descripcion": descripcion.replace("La variable `{nombre}`", "Una variable"),
+            "cwe": METADATOS[regla][0],
+            "iso25010": METADATOS[regla][1],
+        }
+        for regla, (tipo, severidad, descripcion) in TABLA.items()
+    ]
