@@ -337,13 +337,13 @@ _SQL_PISTA = re.compile(r"\b(?:SELECT\b|INSERT\s+INTO\b|UPDATE\s+\w+\s+SET\b|DEL
 PATRONES: list[tuple[str, tuple[str, ...], re.Pattern[str], bool]] = [
     ("eval", JS, _EVAL_JS, True),
     ("eval", ("py",), _EVAL_PY, True),
-    ("cmd-shell", ("py",), _SHELL, False),
+    ("cmd-shell", ("py",), _SHELL, True),
     ("sql-inyeccion", JS, _SQL_JS, False),
     ("sql-inyeccion", ("py",), _SQL_PY, False),
     ("secreto", TODOS, _SECRETO, False),
     ("secreto", TODOS, _CLAVE_PEM, False),
     ("ruta-concatenada", JS, _RUTA, False),
-    ("deserializacion", ("py",), _DESERIALIZACION, False),
+    ("deserializacion", ("py",), _DESERIALIZACION, True),
     ("tls-desactivado", ("py",), _TLS_PY, False),
     ("tls-desactivado", JS, _TLS_JS, False),
     ("hash-debil", ("py",), _HASH_PY, False),
@@ -512,6 +512,24 @@ def _reglas_sql_acumulado(lineas: list[str]) -> set[tuple[str, int]]:
 # API
 # ---------------------------------------------------------------------------
 
+# Comentario para silenciar un hallazgo revisado a mano:
+#   codesentry-ignore                 -> todas las reglas de esa línea
+#   codesentry-ignore: sql-inyeccion  -> solo esa regla (varias separadas por coma)
+# Vale para su propia línea y, si el comentario está solo en su línea, para la siguiente.
+_IGNORAR = re.compile(r"(?:#|//|/\*)\s*codesentry-ignore(?::\s*(?P<reglas>[\w\-]+(?:\s*,\s*[\w\-]+)*))?")
+
+
+def _lineas_ignoradas(codigo: str) -> dict[int, set[str]]:
+    ignoradas: dict[int, set[str]] = {}
+    for numero, linea in enumerate(codigo.splitlines(), start=1):
+        m = _IGNORAR.search(linea)
+        if not m:
+            continue
+        reglas = {r.strip() for r in m["reglas"].split(",")} if m["reglas"] else {"*"}
+        solo_comentario = linea.lstrip().startswith(("#", "//", "/*"))
+        for destino in ((numero, numero + 1) if solo_comentario else (numero,)):
+            ignoradas.setdefault(destino, set()).update(reglas)
+    return ignoradas
 
 def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
     """Hallazgos de un archivo completo, con la línea real, ordenados por línea."""
@@ -560,5 +578,9 @@ def analizar(codigo: str, lenguaje: str) -> list[HallazgoRegla]:
             resultado.append(
                 HallazgoRegla("variable-no-definida", tipo, severidad, numero, descripcion.format(nombre=nombre))
             )
+
+    # Hallazgos silenciados con codesentry-ignore (se lee del código original: en `limpio` los comentarios ya están en blanco)
+    ignoradas = _lineas_ignoradas(codigo)
+    resultado = [h for h in resultado if not (ignoradas.get(h.linea_codigo, set()) & {"*", h.regla})]
 
     return sorted(resultado, key=lambda h: (h.linea_codigo, h.regla))

@@ -50,4 +50,13 @@ describe("scanner.service", () => {
       codigo: "RUTA_INEXISTENTE",
     });
   });
+
+  it("ignora tests, __tests__ y fixtures", async () => {
+    for (const d of ["tests", "__tests__", "fixtures"]) {
+      await fs.mkdir(path.join(carpeta, d));
+      await fs.writeFile(path.join(carpeta, d, "t.js"), "x");
+    }
+    const rutas = ((await escanear(1, carpeta)) as { ruta_relativa: string }[]).map((a) => a.ruta_relativa);
+    expect(rutas.some((r) => /^(tests|__tests__|fixtures)\//.test(r))).toBe(false);
+  });
 });

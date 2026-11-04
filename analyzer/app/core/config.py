@@ -17,7 +17,9 @@ class Settings:
     OLLAMA_URL: str = field(default_factory=lambda: os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/"))
     OLLAMA_DEFAULT_MODEL: str = field(default_factory=lambda: os.getenv("OLLAMA_DEFAULT_MODEL", "qwen2.5-coder"))
     IGNORED_DIRS: list[str] = field(
-        default_factory=lambda: _lista("IGNORED_DIRS", "node_modules,.git,dist,build,__pycache__,.venv")
+        default_factory=lambda: _lista(
+            "IGNORED_DIRS", "node_modules,.git,dist,build,__pycache__,.venv,tests,__tests__,fixtures"
+        )
     )
     SUPPORTED_EXTENSIONS: list[str] = field(default_factory=lambda: _lista("SUPPORTED_EXTENSIONS", ".js,.ts,.py"))
     ANALYZER_PORT: int = field(default_factory=lambda: int(os.getenv("ANALYZER_PORT", "8000")))

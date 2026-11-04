@@ -229,3 +229,15 @@ def test_fixture_user_manager_ts():
         ("prototipos", _linea(c, "target[key] = source[key]")),
     }
     assert _hallazgos(c, "ts") == esperado
+    
+def test_shell_y_pickle_dentro_de_una_cadena_no_se_marcan():
+    c = _t('c = _t("subprocess.run(a, shell=True)")', 'd = "pickle.loads(x)"')
+    assert _hallazgos(c, "py") == set()
+    assert _hallazgos('subprocess.run("ls", shell=True)', "py") == {("cmd-shell", 1)}
+
+
+def test_codesentry_ignore_en_la_misma_linea_o_la_anterior():
+    c = _t("eval(a);  // codesentry-ignore", "// codesentry-ignore: eval", "eval(b);", "eval(c);")
+    assert _hallazgos(c, "js") == {("eval", 4)}
+    assert _hallazgos("eval(a); // codesentry-ignore: sql-inyeccion", "js") == {("eval", 1)}
+    assert _hallazgos(_t("# codesentry-ignore", "x = eval(s)"), "py") == set()

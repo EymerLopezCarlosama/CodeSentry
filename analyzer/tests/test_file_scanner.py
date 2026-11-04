@@ -50,3 +50,11 @@ def test_react_se_incluye(tmp_path):
     archivos, omitidos = escanear(str(tmp_path), "carpeta", None, LENGUAJES)
     assert sorted(archivos) == ["App.jsx", "Vista.tsx"]
     assert omitidos == []
+    
+def test_tests_y_fixtures_se_ignoran(tmp_path):
+    (tmp_path / "a.py").write_text("x = 1")
+    for carpeta in ("tests", "__tests__", "fixtures"):
+        (tmp_path / carpeta).mkdir()
+        (tmp_path / carpeta / "t.py").write_text("eval(x)")
+    archivos, omitidos = escanear(str(tmp_path), "carpeta", None, LENGUAJES)
+    assert archivos == ["a.py"] and omitidos == []
