@@ -184,6 +184,7 @@ export async function actualizar(id: number, datos: DatosActualizarProyecto): Pr
     campos.push("fecha_actualizacion = CURRENT_DATE");
 
     const [resultado] = await conexion.query<ResultSetHeader>(
+      // codesentry-ignore: sql-inyeccion (campos son fragmentos fijos "col = ?"; los valores van con ?)
       `UPDATE Proyecto SET ${campos.join(", ")} WHERE id_proyecto = ?`,
       [...valores, id]
     );
