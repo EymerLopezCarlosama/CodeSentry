@@ -67,6 +67,14 @@ routes.get(
   },
 );
 
+routes.get("/reglas", async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(await analyzerClient.reglas());
+  } catch (err) {
+    next(err);
+  }
+});
+
 routes.use("/proyectos", proyectosRouter);
 routes.use("/dashboard", dashboardRouter);
 routes.use(checklistRouter);

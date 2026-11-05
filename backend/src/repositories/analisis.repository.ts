@@ -34,6 +34,7 @@ export interface HallazgoNuevo {
   severidad: Severidad;
   linea_codigo: number;
   descripcion: string;
+  regla?: string;
 }
 
 export interface ResumenInsercion {
@@ -183,9 +184,9 @@ export async function insertarResultadosConChecklist(
         continue;
       }
       const [res] = await conexion.query<ResultSetHeader>(
-        `INSERT INTO Resultado (id_analisis, id_archivo, tipo, descripcion, severidad, linea_codigo)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [idAnalisis, idArchivo, h.tipo, h.descripcion, h.severidad, h.linea_codigo]
+        `INSERT INTO Resultado (id_analisis, id_archivo, regla, tipo, descripcion, severidad, linea_codigo)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [idAnalisis, idArchivo, h.regla ?? null, h.tipo, h.descripcion, h.severidad, h.linea_codigo]
       );
       await conexion.query(
         `INSERT INTO ChecklistItem (id_resultado, id_estado) VALUES (?, ?)`,

@@ -37,6 +37,7 @@ export async function listar(
     const grupo = porArchivo.get(fila.ruta_relativa) ?? { id_archivo: fila.id_archivo, hallazgos: [] };
     grupo.hallazgos.push({
       id_resultado: fila.id_resultado,
+      regla: fila.regla ?? null,
       tipo: fila.tipo,
       severidad: fila.severidad,
       linea_codigo: fila.linea_codigo,

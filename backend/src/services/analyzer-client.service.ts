@@ -15,6 +15,7 @@ export interface EntradaTrabajo {
 
 export interface HallazgoAnalyzer {
   ruta_relativa: string;
+  regla?: string;
   tipo: "vulnerabilidad" | "mala_practica" | "refactorizacion";
   severidad: "baja" | "media" | "alta" | "critica";
   linea_codigo: number;
@@ -47,6 +48,15 @@ export interface ResultadoEscaneo {
   no_soportados: Record<string, number>;
   total_archivos: number;
   truncado: boolean;
+}
+
+export interface ReglaCatalogo {
+  id: string;
+  tipo: string;
+  severidad: string;
+  descripcion: string;
+  cwe: string | null;
+  iso25010: string;
 }
 
 // Códigos con status propio; cualquier otro código del analyzer sale como 502 (api-contract).
@@ -160,4 +170,8 @@ export interface SalidaPruebas {
 export async function generarPruebas(entrada: EntradaPruebas): Promise<SalidaPruebas> {
   // Hasta 2 intentos de ~65 s cada uno en un equipo modesto: se deja margen.
   return (await llamar<SalidaPruebas>("POST", "/pruebas", entrada, 250_000)).datos;
+}
+
+export async function reglas(): Promise<ReglaCatalogo[]> {
+  return (await llamar<ReglaCatalogo[]>("GET", "/reglas")).datos;
 }

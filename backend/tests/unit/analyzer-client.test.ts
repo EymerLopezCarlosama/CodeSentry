@@ -77,4 +77,9 @@ describe("analyzer-client", () => {
     expect(espia).toHaveBeenLastCalledWith(10_000);
     espia.mockRestore();
   });
+    it("reglas devuelve el catálogo", async () => {
+    const cat = [{ id: "eval", tipo: "vulnerabilidad", severidad: "critica", descripcion: "x", cwe: "CWE-95", iso25010: "Seguridad" }];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(respuesta(200, cat)));
+    expect(await client.reglas()).toEqual(cat);
+  });
 });

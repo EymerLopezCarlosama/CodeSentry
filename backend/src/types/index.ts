@@ -112,6 +112,7 @@ export interface Hallazgo {
   linea_codigo: number;
   descripcion: string;
   estado_checklist: EstadoChecklist;
+  regla: string | null;
 }
 
 export interface ResultadosAgrupados {
