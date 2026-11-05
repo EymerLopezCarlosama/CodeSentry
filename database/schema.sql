@@ -1,5 +1,5 @@
 -- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+
--- v6: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo + Resultados.regla
+-- v7: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo + Resultados.regla + ChecklistItem.motivo
 -- Los datos semilla (Estado, Lenguaje) están en database/seeds/catalogos.sql
 CREATE DATABASE IF NOT EXISTS codesentry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE codesentry;
@@ -88,7 +88,9 @@ CREATE TABLE ChecklistItem (
   id_checklist  INT AUTO_INCREMENT PRIMARY KEY,
   id_resultado  INT NOT NULL,
   id_estado     INT NOT NULL,
+  motivo        VARCHAR(20) NULL,
   fecha_marcado DATE NULL,
+  CONSTRAINT chk_checklist_motivo CHECK (motivo IS NULL OR motivo IN ('falso_positivo','no_aplica','riesgo_aceptado')),
   FOREIGN KEY (id_resultado) REFERENCES Resultado(id_resultado) ON DELETE CASCADE,
   FOREIGN KEY (id_estado)    REFERENCES Estado(id_estado)
 );
