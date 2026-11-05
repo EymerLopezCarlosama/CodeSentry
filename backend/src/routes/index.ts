@@ -12,6 +12,7 @@ import { reportesRouter } from "./reportes.routes";
 import { revisionesRouter } from "./revisiones.routes";
 import { resultadosRouter } from "./resultados.routes";
 import archivosRoutes from "./archivos.routes";
+import { estadisticasRouter } from "./estadisticas.routes";
 
 export const routes = Router();
 
@@ -84,3 +85,4 @@ routes.use("/revisiones", revisionesRouter);
 routes.use(resultadosRouter);
 routes.use(reportesRouter);
 routes.use("/archivos", archivosRoutes);
+routes.use(estadisticasRouter);

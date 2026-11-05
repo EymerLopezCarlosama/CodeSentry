@@ -1841,6 +1841,27 @@ legend {
 .pruebas-codigo { margin: 0; padding: .8rem; max-height: 420px; overflow: auto; font-size: .8rem; line-height: 1.5; white-space: pre; tab-size: 2; }
 .pruebas-nota { display: block; padding: .4rem .8rem; opacity: .7; }
 
+.barra-precision {
+  display: inline-block;
+  width: 90px;
+  height: 8px;
+  margin-right: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-borde);
+  vertical-align: middle;
+}
+
+.barra-precision > span {
+  display: block;
+  height: 100%;
+  background: var(--degradado-primario);
+}
+
+.barra-precision.baja > span {
+  background: var(--color-peligro);
+}
+
 /* Accesibilidad: movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,

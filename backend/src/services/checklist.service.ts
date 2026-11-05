@@ -1,7 +1,7 @@
 import { AppError } from "../middlewares/error-handler";
 import * as checklistRepository from "../repositories/checklist.repository";
 import type { ItemChecklistFila } from "../repositories/checklist.repository";
-import { EstadoChecklist } from "../types";
+import { EstadoChecklist, MotivoRechazo} from "../types";
 
 // Fecha local de hoy en formato YYYY-MM-DD
 function hoy(): string {
@@ -17,7 +17,8 @@ export async function listar(idAnalisis: number): Promise<ItemChecklistFila[]> {
 
 export async function marcar(
   idItem: number,
-  estado: EstadoChecklist
+  estado: EstadoChecklist,
+  motivo?: MotivoRechazo
 ): Promise<ItemChecklistFila> {
   const item = await checklistRepository.obtenerPorId(idItem);
   if (!item) {
@@ -30,7 +31,9 @@ export async function marcar(
   }
 
   const fecha = estado === "pendiente" ? null : hoy();
-  await checklistRepository.actualizarEstado(idItem, idEstado, fecha);
+  // El motivo solo se conserva al rechazar; al aceptar o volver a pendiente se borra
+  const motivoFinal = estado === "rechazada" ? motivo ?? null : null;
+  await checklistRepository.actualizarEstado(idItem, idEstado, fecha, motivoFinal);
 
   const actualizado = await checklistRepository.obtenerPorId(idItem);
   if (!actualizado) {

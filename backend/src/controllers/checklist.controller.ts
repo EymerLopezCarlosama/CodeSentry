@@ -14,7 +14,7 @@ export async function listar(req: Request, res: Response, next: NextFunction): P
 // PATCH /checklist/:id
 export async function marcar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const item = await checklistService.marcar(Number(req.params.id), req.body.estado);
+    const item = await checklistService.marcar(Number(req.params.id), req.body.estado, req.body.motivo);
     res.status(200).json(item);
   } catch (err) {
     next(err);

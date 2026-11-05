@@ -10,5 +10,6 @@
 | Resultado | id_archivo | INT | Entero (11) | Archivo donde se detectó el hallazgo (HU-07 agrupa por archivo). | FK · NOT NULL · ON DELETE CASCADE | N:1 con Archivo.id_archivo |
 | Archivo | (id_proyecto, ruta_relativa) | — | — | Un mismo archivo no se registra dos veces en un proyecto. | UNIQUE | Ninguna |
 Resultado | regla | VARCHAR | 40 | Id de la regla estática que detectó el hallazgo (base de las estadísticas de mejora continua). | NULL permitido (resultados anteriores) | Ninguna
+ChecklistItem | motivo | VARCHAR | 20 | Motivo del rechazo: falso_positivo, no_aplica o riesgo_aceptado. | NULL permitido · CHECK IN ('falso_positivo','no_aplica','riesgo_aceptado') | Ninguna
 
 Además, en la tabla Archivo cambia la relación de `lenguaje`: guarda el código ('js','ts','py') y no tiene FK a Lenguaje.nombre (que guarda 'JavaScript','TypeScript','Python'). El diccionario original la describía como "N:1 con Lenguaje.nombre"; no es una FK real.

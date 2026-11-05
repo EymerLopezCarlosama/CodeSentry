@@ -56,32 +56,34 @@ SET @n2 = LAST_INSERT_ID();
 CREATE TEMPORARY TABLE demo_hallazgos (
   proyecto    TINYINT      NOT NULL,
   ruta        VARCHAR(255) NOT NULL,
+  regla       VARCHAR(40)  NULL,
   tipo        VARCHAR(20)  NOT NULL,
   severidad   VARCHAR(15)  NOT NULL,
   linea       INT          NOT NULL,
   descripcion TEXT         NOT NULL,
-  estado      VARCHAR(30)  NOT NULL
+  estado      VARCHAR(30)  NOT NULL,
+  motivo      VARCHAR(20)  NULL
 );
 
-INSERT INTO demo_hallazgos (proyecto, ruta, tipo, severidad, linea, descripcion, estado) VALUES
-  (1, 'src/app.ts',  'vulnerabilidad',  'critica', 42, 'Consulta SQL concatenada con datos del usuario; usar parámetros (?).', 'pendiente'),
-  (1, 'src/app.ts',  'vulnerabilidad',  'alta',    17, 'El secreto de la sesión está escrito en el código; moverlo a una variable de entorno.', 'aceptada'),
-  (1, 'src/app.ts',  'mala_practica',   'media',   88, 'Los errores se ignoran en un catch vacío; registrar o propagar el error.', 'aceptada'),
-  (1, 'src/db.js',   'mala_practica',   'media',   12, 'Se abre una conexión nueva por cada consulta; reutilizar un pool.', 'rechazada'),
-  (1, 'src/db.js',   'refactorizacion', 'baja',    55, 'La función repite la misma validación tres veces; extraerla a una función.', 'pendiente'),
-  (1, 'src/db.js',   'refactorizacion', 'baja',    73, 'Nombres de variables poco claros (a, b, tmp); usar nombres descriptivos.', 'aceptada'),
-  (2, 'main.py',     'vulnerabilidad',  'alta',    23, 'Se usa eval() sobre texto de entrada; reemplazar por ast.literal_eval.', 'pendiente'),
-  (2, 'main.py',     'mala_practica',   'media',    9, 'Importaciones con asterisco; importar solo lo necesario.', 'rechazada'),
-  (2, 'utils.py',    'refactorizacion', 'baja',    31, 'Función de más de 60 líneas; dividirla en funciones más pequeñas.', 'pendiente'),
-  (2, 'utils.py',    'mala_practica',   'critica', 14, 'La contraseña se compara en texto plano; usar un hash.', 'aceptada');
+INSERT INTO demo_hallazgos (proyecto, ruta, regla, tipo, severidad, linea, descripcion, estado, motivo) VALUES
+  (1, 'src/app.ts',  'sql-inyeccion', 'vulnerabilidad',  'critica', 42, 'Consulta SQL concatenada con datos del usuario; usar parámetros (?).', 'pendiente', NULL),
+  (1, 'src/app.ts',  'secreto',       'vulnerabilidad',  'alta',    17, 'El secreto de la sesión está escrito en el código; moverlo a una variable de entorno.', 'aceptada', NULL),
+  (1, 'src/app.ts',  NULL,            'mala_practica',   'media',   88, 'Los errores se ignoran en un catch vacío; registrar o propagar el error.', 'aceptada', NULL),
+  (1, 'src/db.js',   NULL,            'mala_practica',   'media',   12, 'Se abre una conexión nueva por cada consulta; reutilizar un pool.', 'rechazada', 'no_aplica'),
+  (1, 'src/db.js',   NULL,            'refactorizacion', 'baja',    55, 'La función repite la misma validación tres veces; extraerla a una función.', 'pendiente', NULL),
+  (1, 'src/db.js',   NULL,            'refactorizacion', 'baja',    73, 'Nombres de variables poco claros (a, b, tmp); usar nombres descriptivos.', 'aceptada', NULL),
+  (2, 'main.py',     'eval',          'vulnerabilidad',  'alta',    23, 'Se usa eval() sobre texto de entrada; reemplazar por ast.literal_eval.', 'pendiente', NULL),
+  (2, 'main.py',     NULL,            'mala_practica',   'media',    9, 'Importaciones con asterisco; importar solo lo necesario.', 'rechazada', 'falso_positivo'),
+  (2, 'utils.py',    NULL,            'refactorizacion', 'baja',    31, 'Función de más de 60 líneas; dividirla en funciones más pequeñas.', 'pendiente', NULL),
+  (2, 'utils.py',    NULL,            'mala_practica',   'critica', 14, 'La contraseña se compara en texto plano; usar un hash.', 'aceptada', NULL);
 
-INSERT INTO Resultado (id_analisis, id_archivo, tipo, descripcion, severidad, linea_codigo)
-SELECT IF(h.proyecto = 1, @n1, @n2), a.id_archivo, h.tipo, h.descripcion, h.severidad, h.linea
+INSERT INTO Resultado (id_analisis, id_archivo, regla, tipo, descripcion, severidad, linea_codigo)
+SELECT IF(h.proyecto = 1, @n1, @n2), a.id_archivo, h.regla, h.tipo, h.descripcion, h.severidad, h.linea
 FROM demo_hallazgos h
 JOIN Archivo a ON a.id_proyecto = IF(h.proyecto = 1, @p1, @p2) AND a.ruta_relativa = h.ruta;
 
-INSERT INTO ChecklistItem (id_resultado, id_estado, fecha_marcado)
-SELECT r.id_resultado, e.id_estado, IF(h.estado = 'pendiente', NULL, CURDATE())
+INSERT INTO ChecklistItem (id_resultado, id_estado, motivo, fecha_marcado)
+SELECT r.id_resultado, e.id_estado, h.motivo, IF(h.estado = 'pendiente', NULL, CURDATE())
 FROM demo_hallazgos h
 JOIN Archivo a   ON a.id_proyecto = IF(h.proyecto = 1, @p1, @p2) AND a.ruta_relativa = h.ruta
 JOIN Resultado r ON r.id_archivo = a.id_archivo AND r.linea_codigo = h.linea

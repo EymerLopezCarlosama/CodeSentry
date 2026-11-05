@@ -4,6 +4,7 @@ export type Severidad = "baja" | "media" | "alta" | "critica";
 export type EstadoChecklist = "pendiente" | "aceptada" | "rechazada";
 export type NombreLenguaje = "JavaScript" | "TypeScript" | "Python";
 export type TipoHallazgo = "vulnerabilidad" | "mala_practica" | "refactorizacion";
+export type MotivoRechazo = "falso_positivo" | "no_aplica" | "riesgo_aceptado";
 
 // Espejo de ProyectoRespuesta del backend (docs/api-contract.md)
 export interface Proyecto {
@@ -53,6 +54,7 @@ export interface ItemChecklist {
   descripcion: string;
   estado: EstadoChecklist;
   fecha_marcado: string | null;
+  motivo: MotivoRechazo | null;
 }
 
 export interface ModelosDisponibles {
@@ -215,4 +217,17 @@ export interface ReglaCatalogo {
   descripcion: string;
   cwe: string | null;
   iso25010: string;
+}
+
+export interface EstadisticaRegla {
+  regla: string;
+  total: number;
+  aceptadas: number;
+  rechazadas: number;
+  pendientes: number;
+  falsos_positivos: number;
+  muestra_suficiente: boolean;
+  tasa_aceptacion: number | null;
+  precision_estimada: number | null;
+  sugerencia: string | null;
 }
