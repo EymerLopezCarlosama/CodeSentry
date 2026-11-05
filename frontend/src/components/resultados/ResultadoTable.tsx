@@ -18,7 +18,6 @@ interface ResultadoTableProps {
 
 const ORDEN: Severidad[] = ["critica", "alta", "media", "baja"];
 const TEXTO: Record<Severidad, string> = { critica: "Crítica", alta: "Alta", media: "Media", baja: "Baja" };
-const catalogo = useReglas();
 
 function severidadMaxima(archivo: ArchivoConHallazgos): Severidad {
   return ORDEN.find((s) => archivo.hallazgos.some((h) => h.severidad === s)) ?? "baja";
@@ -34,6 +33,9 @@ export default function ResultadoTable({
   idResaltado = null,
   filtrado = false,
 }: ResultadoTableProps) {
+  // 1. LLAMADA AL HOOK DENTRO DE LA FUNCIÓN DEL COMPONENTE
+  const catalogo = useReglas();
+
   // Apertura inicial: con filtro, todos; sin filtro, solo los que tienen críticos o el hallazgo enlazado.
   const [abiertos, setAbiertos] = useState<Set<string>>(
     () =>
