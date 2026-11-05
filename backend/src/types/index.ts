@@ -7,6 +7,7 @@ export type EstadoAnalisis = "pendiente" | "en_proceso" | "completado" | "fallid
 export type EstadoChecklist = "pendiente" | "aceptada" | "rechazada";
 export type FormatoReporte = "pdf" | "html" | "json";
 export type TipoObjetivo = "carpeta" | "archivo";
+export type MotivoRechazo = "falso_positivo" | "no_aplica" | "riesgo_aceptado";
 
 // ── Filas de la BD (fechas como "YYYY-MM-DD" por dateStrings) ──
 export interface Estado {
@@ -68,6 +69,7 @@ export interface ChecklistItem {
   id_checklist: number;
   id_resultado: number;
   id_estado: number;
+  motivo: MotivoRechazo | null;
   fecha_marcado: string | null;
 }
 
@@ -167,4 +169,17 @@ export interface FragmentoCodigo {
   total_lineas: number;
   linea_fuera_de_rango: boolean; // el archivo cambió y ya no tiene esa línea
   lineas: LineaCodigo[];
+}
+
+export interface EstadisticaRegla {
+  regla: string;
+  total: number;
+  aceptadas: number;
+  rechazadas: number;
+  pendientes: number;
+  falsos_positivos: number;
+  muestra_suficiente: boolean;
+  tasa_aceptacion: number | null; // % de aceptadas sobre las marcadas
+  precision_estimada: number | null; // % de marcadas que no son falsos positivos confirmados
+  sugerencia: string | null;
 }

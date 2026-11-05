@@ -1,6 +1,6 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database";
-import { EstadoChecklist, Severidad, TipoHallazgo } from "../types";
+import { EstadoChecklist, MotivoRechazo, Severidad, TipoHallazgo } from "../types";
 
 export interface ItemChecklistFila {
   id_checklist: number;
@@ -11,6 +11,7 @@ export interface ItemChecklistFila {
   severidad: Severidad;
   descripcion: string;
   estado: EstadoChecklist;
+  motivo: MotivoRechazo | null;
   fecha_marcado: string | null;
 }
 
@@ -22,8 +23,8 @@ interface FilaEstado extends RowDataPacket {
 
 const SELECT_ITEM = `
   SELECT c.id_checklist, c.id_resultado, a.ruta_relativa, r.linea_codigo,
-         r.tipo, r.severidad, r.descripcion,
-         e.nombre_estado AS estado, c.fecha_marcado
+        r.tipo, r.severidad, r.descripcion,
+        e.nombre_estado AS estado, c.motivo, c.fecha_marcado
   FROM ChecklistItem c
   JOIN Resultado r ON r.id_resultado = c.id_resultado
   JOIN Archivo a ON a.id_archivo = r.id_archivo
@@ -33,8 +34,8 @@ const SELECT_ITEM = `
 export async function listarPorAnalisis(idAnalisis: number): Promise<ItemChecklistFila[]> {
   const [filas] = await pool.query<FilaItem[]>(
     `${SELECT_ITEM}
-     WHERE r.id_analisis = ?
-     ORDER BY FIELD(r.severidad, 'critica', 'alta', 'media', 'baja'),
+      WHERE r.id_analisis = ?
+      ORDER BY FIELD(r.severidad, 'critica', 'alta', 'media', 'baja'),
               a.ruta_relativa, r.linea_codigo`,
     [idAnalisis]
   );
@@ -56,15 +57,16 @@ export async function obtenerIdEstado(nombre: string, contexto: string): Promise
   return filas[0]?.id_estado ?? null;
 }
 
-// fechaMarcado: "YYYY-MM-DD" o null. Devuelve filas afectadas.
+// fechaMarcado: "YYYY-MM-DD" o null. motivo: solo al rechazar. Devuelve filas afectadas.
 export async function actualizarEstado(
   idChecklist: number,
   idEstado: number,
-  fechaMarcado: string | null
+  fechaMarcado: string | null,
+  motivo: MotivoRechazo | null = null
 ): Promise<number> {
   const [resultado] = await pool.query<ResultSetHeader>(
-    "UPDATE ChecklistItem SET id_estado = ?, fecha_marcado = ? WHERE id_checklist = ?",
-    [idEstado, fechaMarcado, idChecklist]
+    "UPDATE ChecklistItem SET id_estado = ?, motivo = ?, fecha_marcado = ? WHERE id_checklist = ?",
+    [idEstado, motivo, fechaMarcado, idChecklist]
   );
   return resultado.affectedRows;
 }
