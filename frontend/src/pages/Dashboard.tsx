@@ -7,11 +7,13 @@ import Loader from "../components/common/Loader";
 import GraficoChecklist from "../components/dashboard/GraficoChecklist";
 import GraficoSeveridad from "../components/dashboard/GraficoSeveridad";
 import KpiCards from "../components/dashboard/KpiCards";
+import TablaReglas from "../components/dashboard/TablaReglas";
 import Bienvenida from "../components/layout/Bienvenida";
 import EncabezadoPagina from "../components/layout/EncabezadoPagina";
 import * as dashboardService from "../services/dashboard.service";
+import * as estadisticasService from "../services/estadisticas.service";
 import * as revisionesService from "../services/revisiones.service";
-import type { AnalisisResumen, Dashboard as DatosDashboard } from "../types";
+import type { AnalisisResumen, Dashboard as DatosDashboard, EstadisticaRegla } from "../types";
 
 const DESCRIPCION = "Estado general de tus proyectos, hallazgos y revisiones.";
 
@@ -19,9 +21,26 @@ export default function Dashboard() {
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recientes, setRecientes] = useState<AnalisisResumen[]>([]);
+  const [reglas, setReglas] = useState<EstadisticaRegla[]>([]);
   const navigate = useNavigate();
 
-  // Últimos análisis: si falla no se bloquea el dashboard
+  // Calidad de las reglas: si falla no bloquea el dashboard
+  useEffect(() => {
+    let activo = true;
+    estadisticasService
+      .porRegla()
+      .then((r) => {
+        if (activo && Array.isArray(r)) {
+          setReglas(r);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  // Últimos análisis: si falla no bloquea el dashboard
   useEffect(() => {
     let activo = true;
     revisionesService
@@ -93,6 +112,19 @@ export default function Dashboard() {
         <GraficoSeveridad por_severidad={datos.por_severidad} />
         <GraficoChecklist checklist={datos.checklist} />
       </div>
+
+      {reglas.length > 0 && (
+        <>
+          <div className="seccion-titulo">
+            <h2>Calidad de las reglas</h2>
+          </div>
+          <p className="texto-suave" style={{ marginBottom: "var(--espacio-3)" }}>
+            Medida con tus decisiones en el checklist. Con menos de 10 hallazgos marcados por regla no se
+            saca ninguna conclusión, y el sistema solo sugiere: nunca cambia una regla por su cuenta.
+          </p>
+          <TablaReglas estadisticas={reglas} />
+        </>
+      )}
 
       <div className="seccion-titulo">
         <h2>Análisis recientes</h2>

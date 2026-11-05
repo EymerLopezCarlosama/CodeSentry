@@ -4,7 +4,7 @@ import Button from "../components/common/Button";
 import Loader from "../components/common/Loader";
 import ChecklistItem from "../components/checklist/ChecklistItem";
 import * as checklistService from "../services/checklist.service";
-import type { EstadoChecklist, ItemChecklist } from "../types";
+import type { EstadoChecklist, ItemChecklist, MotivoRechazo} from "../types";
 
 export default function Checklist() {
   const { id } = useParams();
@@ -36,11 +36,11 @@ export default function Checklist() {
     }
   }, [cargar, idAnalisis]);
 
-  async function marcar(idItem: number, estado: EstadoChecklist): Promise<void> {
+  async function marcar(idItem: number, estado: EstadoChecklist, motivo?: MotivoRechazo): Promise<void> {
     setErrorMarcar(null);
     setGuardando(idItem);
     try {
-      const actualizado = await checklistService.marcar(idItem, estado);
+      const actualizado = await checklistService.marcar(idItem, estado, motivo);
       // Se reemplaza solo el item cambiado: sin recargar toda la lista
       setItems((actuales) =>
         actuales.map((i) => (i.id_checklist === idItem ? actualizado : i))
@@ -88,7 +88,7 @@ export default function Checklist() {
               <ChecklistItem
                 key={item.id_checklist}
                 item={item}
-                onMarcar={(idItem, estado) => void marcar(idItem, estado)}
+                onMarcar={(idItem, estado, motivo) => void marcar(idItem, estado, motivo)}
                 deshabilitado={guardando === item.id_checklist}
               />
             ))}
