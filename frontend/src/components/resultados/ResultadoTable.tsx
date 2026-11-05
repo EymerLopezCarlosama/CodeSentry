@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import HallazgoCard from "./HallazgoCard";
 import type { ArchivoConHallazgos, Severidad } from "../../types";
 import PruebasArchivo from "./PruebasArchivo";
+import { useReglas } from "../../hooks/useReglas";
 
 interface ResultadoTableProps {
   archivos: ArchivoConHallazgos[];
@@ -32,6 +33,9 @@ export default function ResultadoTable({
   idResaltado = null,
   filtrado = false,
 }: ResultadoTableProps) {
+  // 1. LLAMADA AL HOOK DENTRO DE LA FUNCIÓN DEL COMPONENTE
+  const catalogo = useReglas();
+
   // Apertura inicial: con filtro, todos; sin filtro, solo los que tienen críticos o el hallazgo enlazado.
   const [abiertos, setAbiertos] = useState<Set<string>>(
     () =>
@@ -132,6 +136,7 @@ export default function ResultadoTable({
                   <HallazgoCard
                     key={hallazgo.id_resultado}
                     hallazgo={hallazgo}
+                    regla={hallazgo.regla ? catalogo.get(hallazgo.regla) : undefined}
                     idAnalisis={idAnalisis}
                     resaltado={hallazgo.id_resultado === idResaltado}
                   />

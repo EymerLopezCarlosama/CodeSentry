@@ -1,4 +1,4 @@
-**# Contrato del analyzer (backend ↔ Python/FastAPI)**
+# Contrato del analyzer (backend ↔ Python/FastAPI)
 
 Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de progreso, HU-06): el backend lanza un trabajo y consulta su avance.
 
@@ -8,6 +8,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 |---|---|---|
 | GET | `/salud` | `{ "analyzer": "ok", "ollama": "ok" }` |
 | GET | `/modelos` | Modelos disponibles en Ollama |
+| GET | `/reglas` | Reglas disponibles en el analyzer |
 | POST | `/analisis` | Crea un trabajo de análisis → `202` `{ "job_id": "abc123" }` |
 | GET | `/analisis/{job_id}` | Estado, progreso y resultados |
 | GET | `/modelos` | Modelos instalados y permitidos |
@@ -23,7 +24,7 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
   "objetivo": "carpeta",
   "ruta_relativa": null,
   "modelo": "qwen2.5-coder",
-  "lenguajes": ["js","ts","py"]
+  "lenguajes": ["js", "ts", "py"]
 }
 ```
 
@@ -34,10 +35,14 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 ```json
 {
   "estado": "completado",
-  "progreso": { "procesados": 12, "total": 12 },
+  "progreso": {
+    "procesados": 12,
+    "total": 12
+  },
   "resultados": [
     {
       "ruta_relativa": "src/app.ts",
+      "regla": "sql-inyeccion",
       "tipo": "vulnerabilidad",
       "severidad": "alta",
       "linea_codigo": 42,
@@ -45,10 +50,16 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
     }
   ],
   "omitidos": [
-    { "ruta_relativa": "main.go", "motivo": "lenguaje no soportado" }
+    {
+      "ruta_relativa": "main.go",
+      "motivo": "lenguaje no soportado"
+    }
   ],
   "errores": [
-    { "ruta_relativa": "src/x.js", "motivo": "respuesta JSON inválida tras 3 intentos" }
+    {
+      "ruta_relativa": "src/x.js",
+      "motivo": "respuesta JSON inválida tras 3 intentos"
+    }
   ],
   "explicaciones_ia": 12
 }
@@ -59,6 +70,21 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 `explicaciones_ia`: cuántas descripciones redactó la IA local (el resto usa la descripción fija de la tabla).
 
 `progreso` cuenta pasos: uno por archivo analizado y uno por cada explicación pedida a la IA.
+
+### GET /reglas (salida)
+
+```json
+{
+  "reglas": [
+    {
+      "regla": "sql-inyeccion",
+      "tipo": "vulnerabilidad",
+      "severidad": "alta",
+      "descripcion": "Consulta SQL concatenada sin parametrizar."
+    }
+  ]
+}
+```
 
 ## Valores permitidos (deben coincidir con los CHECK de la BD)
 
@@ -100,7 +126,10 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
 {
   "modelo": "llama3",
   "estado": "descargando",
-  "progreso": { "completado": 0, "total": 0 }
+  "progreso": {
+    "completado": 0,
+    "total": 0
+  }
 }
 ```
 
@@ -112,7 +141,10 @@ Si ya está instalado → `200` con `estado: "completado"`. Si ya se está desca
 {
   "modelo": "llama3",
   "estado": "descargando",
-  "progreso": { "completado": 1200000, "total": 4700000000 }
+  "progreso": {
+    "completado": 1200000,
+    "total": 4700000000
+  }
 }
 ```
 
@@ -126,8 +158,14 @@ El estado de la descarga vive en memoria del analyzer (se pierde al reiniciarlo)
 
 ```json
 {
-  "soportados": { "JavaScript": 42, "Python": 7 },
-  "no_soportados": { "Java": 12, "PHP": 3 },
+  "soportados": {
+    "JavaScript": 42,
+    "Python": 7
+  },
+  "no_soportados": {
+    "Java": 12,
+    "PHP": 3
+  },
   "total_archivos": 190,
   "truncado": false
 }
@@ -154,12 +192,16 @@ Los errores `OLLAMA_NO_DISPONIBLE` y `MODELO_NO_INSTALADO` siguen siendo válido
 Consulta `GET /analisis/{job_id}` cada 2 s, actualiza `Analisis.id_estado`, y al terminar guarda cada elemento de `resultados` en `Resultado` y crea su `ChecklistItem` en estado `pendiente`.
 
 ## Extensiones opcionales
+
 `POST /documentacion` (HU-11): recibe `{ "ruta_base", "ruta_relativa", "modelo" }` y devuelve `{ "contenido": "..." }`.
 
 `POST /pruebas` (HU-12): recibe `{ "ruta_base", "ruta_relativa", "modelo"? }` y devuelve
 `{ "framework": "jest" | "pytest", "contenido": "...", "aviso": null | "..." }`.
+
 Solo .js/.ts (Jest) y .py (PyTest). Archivos de más de 300 líneas se cortan y `aviso` lo indica.
+
 Errores (400): `RUTA_INEXISTENTE`, `ARCHIVO_INEXISTENTE`, `ARCHIVO_FUERA_DE_RUTA`, `LENGUAJE_NO_SOPORTADO`,
 `ARCHIVO_ILEGIBLE`, `ARCHIVO_VACIO`, `MODELO_NO_INSTALADO` · `503 OLLAMA_NO_DISPONIBLE` ·
 `504 OLLAMA_TIEMPO_EXCEDIDO` · `502 RESPUESTA_INVALIDA` (el modelo no devolvió pruebas tras 2 intentos).
+
 Tarda entre 20 y 70 s según el equipo: quien la llame necesita un timeout largo.

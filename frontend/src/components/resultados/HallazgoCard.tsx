@@ -3,7 +3,7 @@ import Button from "../common/Button";
 import SeveridadBadge from "./SeveridadBadge";
 import VisorCodigo from "./VisorCodigo";
 import * as resultadosService from "../../services/resultados.service";
-import type { ArchivoConHallazgos, EstadoChecklist, FragmentoCodigo, TipoHallazgo } from "../../types";
+import type { ArchivoConHallazgos, EstadoChecklist, FragmentoCodigo, ReglaCatalogo, TipoHallazgo } from "../../types";
 
 type HallazgoDato = ArchivoConHallazgos["hallazgos"][number];
 
@@ -30,11 +30,12 @@ const CONTEXTO_INICIAL = 2;
 
 interface HallazgoCardProps {
   hallazgo: HallazgoDato;
+  regla?: ReglaCatalogo;
   idAnalisis: number;
   resaltado?: boolean; // se llegó a esta tarjeta por un enlace directo
 }
 
-export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }: HallazgoCardProps) {
+export default function HallazgoCard({ hallazgo, regla, idAnalisis, resaltado = false }: HallazgoCardProps) {
   const [abierto, setAbierto] = useState(resaltado);
   const [contexto, setContexto] = useState(CONTEXTO_INICIAL);
   const [fragmento, setFragmento] = useState<FragmentoCodigo | null>(null);
@@ -104,6 +105,16 @@ export default function HallazgoCard({ hallazgo, idAnalisis, resaltado = false }
       <div className="hallazgo-cabecera">
         <SeveridadBadge severidad={hallazgo.severidad} />
         <span className="chip">{ETIQUETAS_TIPO[hallazgo.tipo] ?? hallazgo.tipo}</span>
+        {hallazgo.regla && (
+          <span className="chip chip-regla" title={regla?.descripcion ?? hallazgo.regla}>
+            {hallazgo.regla}
+          </span>
+        )}
+        {regla?.cwe && (
+          <span className="chip" title={`ISO/IEC 25010: ${regla.iso25010}`}>
+            {regla.cwe} · {regla.iso25010}
+          </span>
+        )}
         <span className="hallazgo-linea">Línea {hallazgo.linea_codigo}</span>
         <span className={`chip chip-check-${hallazgo.estado_checklist}`}>
           {ETIQUETAS_CHECKLIST[hallazgo.estado_checklist] ?? hallazgo.estado_checklist}

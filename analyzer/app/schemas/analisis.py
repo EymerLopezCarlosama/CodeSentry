@@ -24,6 +24,7 @@ class EntradaAnalisis(BaseModel):
 
 class Hallazgo(BaseModel):
     ruta_relativa: str
+    regla: str = Field(min_length=1, max_length=40)
     tipo: TipoHallazgo
     severidad: Severidad
     linea_codigo: int = Field(ge=1)

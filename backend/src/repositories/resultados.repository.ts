@@ -20,6 +20,7 @@ export interface FilaHallazgo extends RowDataPacket {
   linea_codigo: number;
   descripcion: string;
   estado_checklist: EstadoChecklist;
+  regla: string | null; 
 }
 
 export async function listarPorAnalisis(
@@ -34,7 +35,7 @@ export async function listarPorAnalisis(
   }
 
   const [filas] = await pool.query<FilaHallazgo[]>(
-    `SELECT r.id_archivo, a.ruta_relativa, r.id_resultado, r.tipo, r.severidad, r.linea_codigo,
+    `SELECT r.id_archivo, a.ruta_relativa, r.id_resultado, r.regla, r.tipo, r.severidad, r.linea_codigo,
             r.descripcion, COALESCE(e.nombre_estado, 'pendiente') AS estado_checklist
       FROM Resultado r
       JOIN Archivo a ON a.id_archivo = r.id_archivo

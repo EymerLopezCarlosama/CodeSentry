@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.schemas.analisis import EntradaAnalisis, EntradaEscaneo, JobCreado, SalidaAnalisis, SalidaEscaneo
 from app.schemas.pruebas import EntradaPruebas, SalidaPruebas
-from app.services import analyzer, escaner, modelos, ollama_client, test_generator
+from app.services import analyzer, escaner, modelos, ollama_client, test_generator, reglas
 
 router = APIRouter()
 
@@ -56,3 +56,7 @@ def pruebas(entrada: EntradaPruebas):
         if getattr(e, "mensaje", None):
             contenido["mensaje"] = e.mensaje
         return JSONResponse(status_code=e.status, content=contenido)
+
+@router.get("/reglas")
+def listar_reglas() -> list[dict]:
+    return reglas.catalogo()

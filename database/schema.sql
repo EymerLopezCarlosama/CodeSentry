@@ -1,5 +1,5 @@
 -- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+
--- v5: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo
+-- v6: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo + Resultados.regla
 -- Los datos semilla (Estado, Lenguaje) están en database/seeds/catalogos.sql
 CREATE DATABASE IF NOT EXISTS codesentry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE codesentry;
@@ -71,6 +71,7 @@ CREATE TABLE Resultado (
   id_resultado INT AUTO_INCREMENT PRIMARY KEY,
   id_analisis  INT NOT NULL,
   id_archivo   INT NOT NULL,
+  regla        VARCHAR(40) NULL,
   tipo         VARCHAR(20) NOT NULL,
   descripcion  TEXT NOT NULL,
   severidad    VARCHAR(15) NOT NULL,
@@ -80,6 +81,8 @@ CREATE TABLE Resultado (
   FOREIGN KEY (id_analisis) REFERENCES Analisis(id_analisis) ON DELETE CASCADE,
   FOREIGN KEY (id_archivo)  REFERENCES Archivo(id_archivo) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_resultado_regla ON Resultado (regla);
 
 CREATE TABLE ChecklistItem (
   id_checklist  INT AUTO_INCREMENT PRIMARY KEY,

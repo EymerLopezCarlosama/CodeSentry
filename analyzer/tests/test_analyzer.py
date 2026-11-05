@@ -187,3 +187,7 @@ def test_el_porcentaje_no_retrocede_durante_las_explicaciones(proyecto, monkeypa
     s = _correr(proyecto)
     assert vistos == sorted(vistos) and vistos[0] > 0
     assert s.progreso.procesados == s.progreso.total
+    
+def test_cada_hallazgo_lleva_el_id_de_su_regla(proyecto):
+    s = _correr(proyecto)
+    assert sorted((h.ruta_relativa, h.regla) for h in s.resultados) == [("a.js", "eval"), ("b.py", "cmd-shell")]
