@@ -212,9 +212,11 @@ Errores: `404 RESULTADO_NO_ENCONTRADO` · `404 ARCHIVO_NO_ENCONTRADO` · `400 RU
 
 |---|---|---|
 
-| PATCH | `/checklist/:id` | body `{ "estado": "aceptada" \| "rechazada" \| "pendiente" }` → `200` + item |
+| PATCH | `/checklist/:id` | body `{ "estado": "aceptada" | "rechazada" | "pendiente", "motivo"?: "falso_positivo" | "no_aplica" | "riesgo_aceptado" }` → `200` + item |
 
 El backend actualiza `ChecklistItem.id_estado` y `fecha_marcado`. Los ChecklistItem se crean en `pendiente` al guardar cada Resultado.
+
+motivo solo es válido con estado: rechazada (de lo contrario retorna 400 DATOS_INVALIDOS). Al aceptar o volver a pendiente, el motivo se elimina. Cada ítem del checklist incluye "motivo": null | "...".
 
 ## Reportes (HU-08)
 
@@ -256,17 +258,32 @@ La petición queda abierta mientras el diálogo esté visible (máximo 5 minutos
 
 ## Utilidades
 
-| GET | `/salud` | `{ "backend": "ok", "base_datos": "ok", "analyzer": "ok", "ollama": "ok" }` |
-
+| Método | Endpoint | Descripción / Cuerpo |
 |---|---|---|
-
+| GET | `/salud` | `{ "backend": "ok", "base_datos": "ok", "analyzer": "ok", "ollama": "ok" }` |
 | GET | `/modelos` | `{ "instalados": [...], "permitidos": [...] }` (selector de HU-03) |
-
 | GET | `/reglas` | Catálogo `[{ id, tipo, severidad, descripcion, cwe, iso25010 }]` |
+| POST | `/modelos/instalar` | Body `{ "modelo": "qwen2.5-coder" }` → `202` / `200` (si ya está instalado). Mismo contrato que el analyzer. |
+| GET | `/modelos/instalar?modelo=...` | Consulta estado de descarga: `descargando` · `completado` · `fallido`. |
+| GET | `/reglas/estadisticas` | Devuelve la tasa de aceptación y precisión estimada calculada por regla. |
 
-| POST | `/modelos/instalar` | body `{ "modelo" }` → `202` / `200` (ya instalado), mismo cuerpo que el analyzer |
+#### Respuesta de `GET /reglas/estadisticas`:
 
-| GET | `/modelos/instalar?modelo=...` | Estado de la descarga: `descargando` · `completado` · `fallido` |
+```json
+[
+  {
+    "regla": "sql-inyeccion",
+    "total": 24,
+    "aceptadas": 15,
+    "rechazadas": 5,
+    "pendientes": 4,
+    "falsos_positivos": 3,
+    "muestra_suficiente": true,
+    "tasa_aceptacion": 75,
+    "precision_estimada": 85,
+    "sugerencia": null
+  }
+]
 
 ## Extensiones opcionales
 
