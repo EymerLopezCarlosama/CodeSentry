@@ -1821,6 +1821,8 @@ legend {
   animation: destello-resaltado 2s ease-out;
 }
 
+.chip-regla { --chip: var(--color-primario); font-family: var(--fuente-mono); }
+
 @keyframes destello-resaltado {
   0% {
     background-color: rgba(34, 211, 238, 0.2);

@@ -124,6 +124,7 @@ export interface Hallazgo {
   linea_codigo: number;
   descripcion: string;
   estado_checklist: EstadoChecklist;
+  regla: string | null
 }
 
 export interface ArchivoConHallazgos {
@@ -205,4 +206,13 @@ export interface PruebasGeneradas {
   contenido: string;
   archivo_sugerido: string;
   aviso: string | null;
+}
+
+export interface ReglaCatalogo {
+  id: string;
+  tipo: TipoHallazgo;
+  severidad: Severidad;
+  descripcion: string;
+  cwe: string | null;
+  iso25010: string;
 }

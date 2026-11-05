@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import HallazgoCard from "./HallazgoCard";
 import type { ArchivoConHallazgos, Severidad } from "../../types";
 import PruebasArchivo from "./PruebasArchivo";
+import { useReglas } from "../../hooks/useReglas";
 
 interface ResultadoTableProps {
   archivos: ArchivoConHallazgos[];
@@ -17,6 +18,7 @@ interface ResultadoTableProps {
 
 const ORDEN: Severidad[] = ["critica", "alta", "media", "baja"];
 const TEXTO: Record<Severidad, string> = { critica: "Crítica", alta: "Alta", media: "Media", baja: "Baja" };
+const catalogo = useReglas();
 
 function severidadMaxima(archivo: ArchivoConHallazgos): Severidad {
   return ORDEN.find((s) => archivo.hallazgos.some((h) => h.severidad === s)) ?? "baja";
@@ -132,6 +134,7 @@ export default function ResultadoTable({
                   <HallazgoCard
                     key={hallazgo.id_resultado}
                     hallazgo={hallazgo}
+                    regla={hallazgo.regla ? catalogo.get(hallazgo.regla) : undefined}
                     idAnalisis={idAnalisis}
                     resaltado={hallazgo.id_resultado === idResaltado}
                   />
