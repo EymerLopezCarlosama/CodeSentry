@@ -25,11 +25,26 @@ def test_el_prompt_incluye_el_problema_y_el_codigo():
 @pytest.mark.parametrize(
     "crudo,esperado",
     [
-        ("La función usa eval con datos externos; reemplácelo por JSON.parse.", "La función usa eval con datos externos; reemplácelo por JSON.parse."),
-        ("Explicación: **El bucle** no actualiza `i` y nunca termina.", "El bucle no actualiza i y nunca termina."),
-        ("- Primera frase de la explicación del error.\n- Segunda frase.", "Primera frase de la explicación del error. Segunda frase."),
-        ('"Se concatena la entrada del usuario en la consulta SQL."', "Se concatena la entrada del usuario en la consulta SQL."),
-        ("Texto antes\n```js\neval(x)\n```\nAhora la explicación completa del problema aquí.", "Texto antes Ahora la explicación completa del problema aquí."),
+        (
+            "La función usa eval con datos externos; reemplácelo por JSON.parse.",
+            "La función usa eval con datos externos; reemplácelo por JSON.parse.",
+        ),
+        (
+            "Explicación: **El bucle** no actualiza `i` y nunca termina.",
+            "El bucle no actualiza i y nunca termina.",
+        ),
+        (
+            "- Primera frase de la explicación del error.\nSegunda frase.",
+            "Primera frase de la explicación del error. Segunda frase.",
+        ),
+        (
+            '"Se concatena la entrada del usuario en la consulta SQL."',
+            "Se concatena la entrada del usuario en la consulta SQL.",
+        ),
+        (
+            "Texto antes\n```js\neval(x)\n```\nAhora la explicación completa del problema aquí.",
+            "Texto antes Ahora la explicación completa del problema aquí.",
+        ),
     ],
 )
 def test_limpiar_deja_texto_plano(crudo, esperado):
@@ -88,3 +103,46 @@ def test_explicar_con_linea_fuera_del_archivo_no_llama_al_modelo():
         raise AssertionError("no debería llamar al modelo")
 
     assert explicar(fuera, LINEAS, "js", "m", generar=no_debe_llamarse) == "Fija."
+
+
+# --- Pruebas de pocos disparos (Few-shot prompting / Ejemplos aceptados) ---
+
+
+def test_el_prompt_incluye_los_ejemplos_aceptados():
+    p = construir_prompt("Problema", ">> 1 | eval(x)", "js", ["Ejemplo aceptado uno.", "Otro ejemplo aceptado."])
+    assert "Ejemplo 1: Ejemplo aceptado uno." in p and "Ejemplo 2: Otro ejemplo aceptado." in p
+    sin = construir_prompt("Problema", ">> 1 | eval(x)", "js")
+    assert "Ejemplo" not in sin and "dos frases" in sin
+
+
+def test_explicar_pasa_al_prompt_solo_ejemplos_utiles():
+    visto = {}
+
+    def falso(modelo, prompt, **opciones):
+        visto["prompt"] = prompt
+        return "La línea 10 evalúa texto recibido: sustitúyalo por JSON.parse."
+
+    ejemplos = [
+        HALLAZGO.descripcion,
+        "  ",
+        "Explicación aceptada A.",
+        "Explicación aceptada A.",
+        "Explicación aceptada B.",
+        "Explicación aceptada C.",
+    ]
+    explicar(HALLAZGO, LINEAS, "js", "m", generar=falso, ejemplos=ejemplos)
+    p = visto["prompt"]
+    assert "Ejemplo 1: Explicación aceptada A." in p and "Ejemplo 2: Explicación aceptada B." in p
+    assert "Explicación aceptada C." not in p  # tope de 2
+    assert p.count(HALLAZGO.descripcion) == 1  # la fija solo aparece como "Problema", no como ejemplo
+
+
+def test_sin_ejemplos_el_prompt_no_cambia():
+    visto = {}
+
+    def falso(modelo, prompt, **opciones):
+        visto["prompt"] = prompt
+        return "ok"
+
+    explicar(HALLAZGO, LINEAS, "js", "m", generar=falso)
+    assert "Ejemplo 1" not in visto["prompt"]

@@ -16,6 +16,7 @@ CONTEXTO = 3  # líneas de código a cada lado de la marcada
 MAX_TOKENS = 110
 MAX_CARACTERES = 320
 MIN_CARACTERES = 25
+MAX_EJEMPLOS = 2
 
 _PREFIJO = re.compile(r"^(?:explicaci[oó]n|respuesta|soluci[oó]n|resumen)\s*:\s*", re.IGNORECASE)
 _VINETA = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+", re.MULTILINE)
@@ -47,6 +48,17 @@ def limpiar(texto: str) -> str | None:
         t = t[: corte + 1] if corte >= MIN_CARACTERES else t[:MAX_CARACTERES].rstrip() + "…"
     return t
 
+def _ejemplos_utiles(hallazgo: HallazgoRegla, ejemplos: list[str] | None) -> list[str]:
+    """Hasta MAX_EJEMPLOS explicaciones aceptadas distintas, sin la descripción fija de la tabla
+    (esa no aporta estilo: es la que se usa cuando la IA no redacta nada)."""
+    utiles: list[str] = []
+    for e in ejemplos or []:
+        texto = (e or "").strip()[:MAX_CARACTERES]
+        if texto and texto != hallazgo.descripcion and texto not in utiles:
+            utiles.append(texto)
+        if len(utiles) == MAX_EJEMPLOS:
+            break
+    return utiles
 
 def explicar(
     hallazgo: HallazgoRegla,
@@ -54,13 +66,19 @@ def explicar(
     lenguaje: str,
     modelo: str,
     generar: Callable[..., str] | None = None,
+    ejemplos: list[str] | None = None,
 ) -> str:
     """Explicación del hallazgo, o su descripción fija si la IA no devuelve nada utilizable.
     OllamaNoDisponibleError se propaga a propósito: el que llama decide dejar de intentarlo."""
     if not 1 <= hallazgo.linea_codigo <= len(lineas_codigo):
         return hallazgo.descripcion
     llamar = generar or ollama_client.generar
-    prompt = construir_prompt(hallazgo.descripcion, fragmento(lineas_codigo, hallazgo.linea_codigo), lenguaje)
+    prompt = construir_prompt(
+        hallazgo.descripcion,
+        fragmento(lineas_codigo, hallazgo.linea_codigo),
+        lenguaje,
+        _ejemplos_utiles(hallazgo, ejemplos),
+    )
     try:
         texto = llamar(modelo, prompt, formato=None, max_tokens=MAX_TOKENS)
     except ollama_client.OllamaNoDisponibleError:
