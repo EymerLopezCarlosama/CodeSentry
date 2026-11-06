@@ -191,3 +191,19 @@ def test_el_porcentaje_no_retrocede_durante_las_explicaciones(proyecto, monkeypa
 def test_cada_hallazgo_lleva_el_id_de_su_regla(proyecto):
     s = _correr(proyecto)
     assert sorted((h.ruta_relativa, h.regla) for h in s.resultados) == [("a.js", "eval"), ("b.py", "cmd-shell")]
+    
+def test_los_ejemplos_llegan_a_la_explicacion_de_su_regla(proyecto, monkeypatch):
+    vistos = {}
+
+    def espia(h, lineas, lenguaje, modelo, ejemplos=None):
+        vistos[h.regla] = ejemplos
+        return "Explicación de la IA."
+
+    _ia(monkeypatch, espia)
+    entrada = EntradaAnalisis(
+        ruta_base=str(proyecto), objetivo="carpeta", ruta_relativa=None, modelo="qwen2.5-coder",
+        lenguajes=["js", "ts", "py"], ejemplos={"eval": ["Explicación que el equipo aceptó antes."]},
+    )
+    analyzer.consultar(analyzer.crear_trabajo(entrada, sincrono=True))
+    assert vistos["eval"] == ["Explicación que el equipo aceptó antes."]
+    assert vistos["cmd-shell"] is None
