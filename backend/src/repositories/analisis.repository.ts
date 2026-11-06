@@ -268,3 +268,36 @@ export async function listar(filtros: {
     graves: Number(f.graves ?? 0),
   }));
 }
+
+// El analyzer elige los 2 mejores; aquí se mandan más porque algunos aceptados pueden ser la descripción fija
+const MAX_EJEMPLOS_POR_REGLA = 6;
+const MAX_LARGO_EJEMPLO = 320;
+
+/** Explicaciones que el equipo aceptó, por regla (las más recientes primero), para usarlas como ejemplo. */
+export async function ejemplosAceptados(): Promise<Record<string, string[]>> {
+  const [filas] = await pool.query<RowDataPacket[]>(
+    `SELECT r.regla, r.descripcion
+       FROM Resultado r
+       JOIN ChecklistItem c ON c.id_resultado = r.id_resultado
+       JOIN Estado e ON e.id_estado = c.id_estado
+      WHERE r.regla IS NOT NULL AND e.nombre_estado = 'aceptada' AND e.contexto_modulo = 'checklist'
+      ORDER BY c.fecha_marcado DESC, r.id_resultado DESC
+      LIMIT 300`
+  );
+
+  const porRegla: Record<string, string[]> = {};
+  for (const fila of filas) {
+    const regla = String(fila.regla);
+    const texto = String(fila.descripcion).trim();
+    const lista = (porRegla[regla] ??= []);
+    if (
+      lista.length < MAX_EJEMPLOS_POR_REGLA &&
+      texto.length > 0 &&
+      texto.length <= MAX_LARGO_EJEMPLO &&
+      !lista.includes(texto)
+    ) {
+      lista.push(texto);
+    }
+  }
+  return Object.fromEntries(Object.entries(porRegla).filter(([, lista]) => lista.length > 0));
+}
