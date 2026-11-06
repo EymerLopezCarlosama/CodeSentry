@@ -8,6 +8,7 @@ vi.mock("../../src/repositories/analisis.repository", () => ({
   cambiarEstado: vi.fn(),
   insertarResultadosConChecklist: vi.fn(),
   obtenerPorId: vi.fn(),
+  ejemplosAceptados: vi.fn(), // <-- Tilføjet her
 }));
 vi.mock("../../src/services/analyzer-client.service", () => ({
   crearTrabajo: vi.fn(),
@@ -53,6 +54,7 @@ beforeEach(() => {
   });
   vi.mocked(repo.cambiarEstado).mockResolvedValue(true);
   vi.mocked(repo.insertarResultadosConChecklist).mockResolvedValue({ insertados: 1, omitidos: [] });
+  vi.mocked(repo.ejemplosAceptados).mockResolvedValue({}); // <-- Standard-værdi tilføjet her
   vi.mocked(client.crearTrabajo).mockResolvedValue({ job_id: "j1" });
 });
 afterEach(() => vi.useRealTimers());
@@ -140,5 +142,14 @@ describe("analisis.service", () => {
   it("obtener inexistente -> 404", async () => {
     vi.mocked(repo.obtenerPorId).mockResolvedValue(null);
     await expect(obtener(99)).rejects.toMatchObject({ status: 404, codigo: "ANALISIS_NO_ENCONTRADO" });
+  });
+
+  it("envía al analyzer los ejemplos aceptados cuando existen", async () => {
+    vi.mocked(repo.ejemplosAceptados).mockResolvedValue({ eval: ["Explicación aceptada."] });
+    vi.mocked(client.consultarTrabajo).mockResolvedValue(salida("completado", 2, [hallazgo]));
+    await correr(8);
+    expect(client.crearTrabajo).toHaveBeenCalledWith(
+      expect.objectContaining({ ejemplos: { eval: ["Explicación aceptada."] } })
+    );
   });
 });

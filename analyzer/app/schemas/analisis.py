@@ -14,6 +14,8 @@ class EntradaAnalisis(BaseModel):
     ruta_relativa: Optional[str] = None
     modelo: str = Field(min_length=1, max_length=50)
     lenguajes: list[Lenguaje] = Field(min_length=1)
+    # Explicaciones que el equipo aceptó antes, por id de regla (opcional): sirven de ejemplo al modelo
+    ejemplos: dict[str, list[str]] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _ruta_relativa_si_archivo(self):

@@ -22,6 +22,16 @@ async function marcarFallido(idAnalisis: number): Promise<void> {
   }
 }
 
+// Si no se pueden leer los ejemplos, el análisis sigue igual que siempre (sin few-shot)
+async function cargarEjemplos(): Promise<Record<string, string[]>> {
+  try {
+    return (await repo.ejemplosAceptados()) ?? {};
+  } catch (err) {
+    logger.warn("analisis: no se pudieron cargar los ejemplos aceptados; se sigue sin ellos", err);
+    return {};
+  }
+}
+
 /** Se lanza SIN await desde revisiones.service. Nunca rechaza. */
 export async function ejecutar(idAnalisis: number): Promise<void> {
   if (enEjecucion.has(idAnalisis)) return;
@@ -36,12 +46,15 @@ export async function ejecutar(idAnalisis: number): Promise<void> {
     await repo.cambiarEstado(idAnalisis, "en_proceso");
     progresos.set(idAnalisis, { procesados: 0, total: 0 });
 
+    const ejemplos = await cargarEjemplos();
     const { job_id } = await analyzerClient.crearTrabajo({
       ruta_base: ctx.ruta_base,
       objetivo: ctx.tipo_objetivo,
       ruta_relativa: ctx.ruta_relativa,
       modelo: ctx.modelo,
       lenguajes: ctx.lenguajes,
+      // Solo se envía si hay ejemplos: sin ellos la petición es idéntica a la de antes
+      ...(Object.keys(ejemplos).length > 0 ? { ejemplos } : {}),
     });
 
     let fallos = 0;

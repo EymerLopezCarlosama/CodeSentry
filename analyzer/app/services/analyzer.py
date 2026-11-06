@@ -55,7 +55,12 @@ def _motivo(e: Exception) -> str:
     return "error inesperado"
 
 
-def _explicar(job: SalidaAnalisis, pendientes: list[_Pendiente], modelo: str) -> None:
+def _explicar(
+    job: SalidaAnalisis,
+    pendientes: list[_Pendiente],
+    modelo: str,
+    ejemplos: dict[str, list[str]] | None = None,
+) -> None:
     orden = sorted(
         pendientes,
         key=lambda p: (ORDEN_SEVERIDAD.get(p.hallazgo.severidad, 9), p.ruta, p.hallazgo.linea_codigo),
@@ -65,13 +70,19 @@ def _explicar(job: SalidaAnalisis, pendientes: list[_Pendiente], modelo: str) ->
     for p in orden[: settings.EXPLICACIONES_MAX]:
         if time.monotonic() > limite:
             break
+        
+        # Extrae los ejemplos aceptados para la regla de este hallazgo (si existen)
+        ej = (ejemplos or {}).get(p.hallazgo.regla) if p.hallazgo.regla else None
+        extra = {"ejemplos": ej} if ej else {}
+        
         try:
-            texto = explicacion.explicar(p.hallazgo, p.lineas, p.lenguaje, modelo)
+            texto = explicacion.explicar(p.hallazgo, p.lineas, p.lenguaje, modelo, **extra)
         except ollama_client.OllamaNoDisponibleError:
             break  # Ollama se cayó: el resto queda con la descripción fija
         except Exception:
             registro.exception("Falló la explicación de %s:%s", p.ruta, p.hallazgo.linea_codigo)
             texto = p.texto
+            
         if texto != p.texto:
             p.texto, p.por_ia = texto, True
             seguidos = 0
@@ -79,6 +90,7 @@ def _explicar(job: SalidaAnalisis, pendientes: list[_Pendiente], modelo: str) ->
             seguidos += 1
             if seguidos >= FALLOS_SEGUIDOS_MAX:
                 break
+                
         with _lock:
             job.progreso.procesados += 1
 
@@ -103,9 +115,10 @@ def _ejecutar(job_id: str, entrada: EntradaAnalisis, archivos: list[str], usar_i
         with _lock:
             # el total reservado al crear el trabajo se ajusta al número real: el porcentaje nunca baja
             job.progreso.total = len(archivos) + a_explicar
+            
         if a_explicar > 0:
             try:
-                _explicar(job, pendientes, entrada.modelo)
+                _explicar(job, pendientes, entrada.modelo, entrada.ejemplos)
             except Exception:
                 registro.exception("Falló la fase de explicaciones; se usan las descripciones fijas")
 
@@ -126,7 +139,6 @@ def _ejecutar(job_id: str, entrada: EntradaAnalisis, archivos: list[str], usar_i
         with _lock:
             job.progreso.procesados = job.progreso.total
             job.estado = "completado" if analizados > 0 else "fallido"
-
 
 def _ia_disponible(modelo: str) -> bool:
     """¿Se pueden pedir explicaciones? Falso si están desactivadas, Ollama está apagado o falta el modelo."""

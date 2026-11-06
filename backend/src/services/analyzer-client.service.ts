@@ -11,6 +11,7 @@ export interface EntradaTrabajo {
   ruta_relativa: string | null;
   modelo: string;
   lenguajes: ("js" | "ts" | "py")[];
+  ejemplos?: Record<string, string[]>; // explicaciones aceptadas por regla (few-shot)
 }
 
 export interface HallazgoAnalyzer {
