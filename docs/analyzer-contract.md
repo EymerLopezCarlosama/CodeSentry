@@ -24,11 +24,14 @@ Base: `http://localhost:8000` · El análisis es **asíncrono** (hay barra de pr
   "objetivo": "carpeta",
   "ruta_relativa": null,
   "modelo": "qwen2.5-coder",
-  "lenguajes": ["js", "ts", "py"]
+  "lenguajes": ["js", "ts", "py"],
+  "ejemplos": { "eval": ["La línea evalúa texto recibido; use JSON.parse."] }
 }
 ```
 
 `objetivo`: `"carpeta"` o `"archivo"` (en ese caso `ruta_relativa` es obligatoria).
+
+"ejemplos (opcional): explicaciones que el equipo aceptó antes, por id de regla. El analyzer usa hasta 2 por regla como ejemplo de estilo al pedir la explicación y descarta las iguales a la descripción fija. No cambia qué se detecta ni cómo se clasifica."
 
 ### GET /analisis/{job_id} (salida)
 
