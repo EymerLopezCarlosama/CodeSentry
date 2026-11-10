@@ -210,6 +210,13 @@ export interface PruebasGeneradas {
   aviso: string | null;
 }
 
+// HU-11: respuesta de POST /archivos/:id/documentacion
+export interface DocumentacionGenerada {
+  contenido: string;
+  archivo_sugerido: string;
+  aviso: string | null;
+}
+
 export interface ReglaCatalogo {
   id: string;
   tipo: TipoHallazgo;

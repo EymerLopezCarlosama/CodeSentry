@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import HallazgoCard from "./HallazgoCard";
 import type { ArchivoConHallazgos, Severidad } from "../../types";
+import DocumentacionArchivo from "./DocumentacionArchivo";
 import PruebasArchivo from "./PruebasArchivo";
 import { useReglas } from "../../hooks/useReglas";
 
@@ -125,8 +126,9 @@ export default function ResultadoTable({
               </button>
             </h2>
 
-            {/* HU-12: Botón y panel de pruebas fuera del acordeón para que no se destruya al colapsar */}
+            {/* HU-11 y HU-12: botones y paneles fuera del acordeón para que no se destruyan al colapsar */}
             <div className="archivo-acciones">
+              <DocumentacionArchivo idArchivo={archivo.id_archivo} rutaRelativa={archivo.ruta_relativa} />
               <PruebasArchivo idArchivo={archivo.id_archivo} rutaRelativa={archivo.ruta_relativa} />
             </div>
 

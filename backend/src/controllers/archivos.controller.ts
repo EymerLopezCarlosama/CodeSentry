@@ -9,3 +9,12 @@ export async function generarPruebas(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
+
+export async function generarDocumentacion(req: Request, res: Response, next: NextFunction) {
+  try {
+    const resultado = await archivosService.generarDocumentacion(Number(req.params.id));
+    res.status(200).json(resultado);
+  } catch (err) {
+    next(err);
+  }
+}

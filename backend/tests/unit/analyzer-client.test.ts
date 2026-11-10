@@ -82,4 +82,27 @@ describe("analyzer-client", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(respuesta(200, cat)));
     expect(await client.reglas()).toEqual(cat);
   });
+
+  it("generarDocumentacion envía los datos al endpoint /documentacion", async () => {
+    const cuerpo = { contenido: "# calc", aviso: null };
+    const f = vi.fn().mockResolvedValue(respuesta(200, cuerpo));
+    vi.stubGlobal("fetch", f);
+    expect(await client.generarDocumentacion({ ruta_base: "D:/p", ruta_relativa: "a.py", modelo: "m" })).toEqual(cuerpo);
+    expect(f.mock.calls[0][0]).toBe("http://analyzer.test/documentacion");
+  });
+
+  it("usa el mensaje que manda el analyzer y, si no hay, el de la tabla", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(respuesta(400, { codigo: "LENGUAJE_NO_SOPORTADO", mensaje: "Solo se genera documentación para .js, .ts y .py." })),
+    );
+    await expect(
+      client.generarDocumentacion({ ruta_base: "x", ruta_relativa: "a.txt", modelo: "m" }),
+    ).rejects.toMatchObject({ status: 400, codigo: "LENGUAJE_NO_SOPORTADO", message: "Solo se genera documentación para .js, .ts y .py." });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(respuesta(400, { codigo: "ARCHIVO_VACIO" })));
+    await expect(
+      client.generarPruebas({ ruta_base: "x", ruta_relativa: "a.py", modelo: "m" }),
+    ).rejects.toMatchObject({ codigo: "ARCHIVO_VACIO", message: "El archivo está vacío, no hay nada que probar." });
+  });
 });

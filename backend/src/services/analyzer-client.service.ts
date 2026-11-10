@@ -112,10 +112,12 @@ async function llamar<T>(
   }
 
   if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { codigo?: string } | null;
+    const data = (await res.json().catch(() => null)) as { codigo?: string; mensaje?: string } | null;
     const codigo = data?.codigo;
     if (codigo) {
-      throw new AppError(STATUS_PROPIOS[codigo] ?? 502, codigo, MENSAJES[codigo] ?? codigo);
+      // El analyzer redacta el mensaje de los generadores (pruebas y documentación dicen cosas distintas);
+      // si no lo manda, se usa el de esta tabla.
+      throw new AppError(STATUS_PROPIOS[codigo] ?? 502, codigo, data?.mensaje || MENSAJES[codigo] || codigo);
     }
     throw new AppError(502, "ANALYZER_ERROR", `El analyzer respondió con el estado ${res.status}.`);
   }
@@ -171,6 +173,22 @@ export interface SalidaPruebas {
 export async function generarPruebas(entrada: EntradaPruebas): Promise<SalidaPruebas> {
   // Hasta 2 intentos de ~65 s cada uno en un equipo modesto: se deja margen.
   return (await llamar<SalidaPruebas>("POST", "/pruebas", entrada, 250_000)).datos;
+}
+
+export interface EntradaDocumentacion {
+  ruta_base: string;
+  ruta_relativa: string;
+  modelo: string;
+}
+
+export interface SalidaDocumentacion {
+  contenido: string;
+  aviso: string | null;
+}
+
+export async function generarDocumentacion(entrada: EntradaDocumentacion): Promise<SalidaDocumentacion> {
+  // Hasta 2 intentos de ~60 s cada uno en un equipo modesto: se deja margen.
+  return (await llamar<SalidaDocumentacion>("POST", "/documentacion", entrada, 250_000)).datos;
 }
 
 export async function reglas(): Promise<ReglaCatalogo[]> {
