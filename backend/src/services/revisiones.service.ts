@@ -1,4 +1,4 @@
-// PROMPT — revisiones.service.ts — Lógica de negocio de revisiones (HU-05)
+// revisiones.service.ts — Lógica de negocio de revisiones (HU-05)
 //
 // crear: proyecto inexistente → 404; si tipo_objetivo="archivo", el archivo debe pertenecer al proyecto (si no, 400).
 // Re-escanear con scanner.service, crear SolicitudRevision y Analisis (estado "pendiente", modelo_ia_usado = Proyecto.modelo_ia) en UNA transacción.

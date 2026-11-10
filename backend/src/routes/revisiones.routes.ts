@@ -1,4 +1,4 @@
-// PROMPT — revisiones.routes.ts — Rutas HTTP de revisiones (HU-05)
+// revisiones.routes.ts — Rutas HTTP de revisiones (HU-05)
 //
 // Router con POST /revisiones (validate → controller). Exportar el router.
 //

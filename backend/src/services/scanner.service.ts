@@ -1,4 +1,4 @@
-// PROMPT — services/scanner.service.ts
+// services/scanner.service.ts
 //
 // Recorrer la carpeta de un proyecto (fs, solo lectura) ignorando node_modules, .git, dist, build, __pycache__, .venv, y quedarse solo con .js/.jsx/.ts/.tsx/.py.
 // Guardar cada archivo en la tabla Archivo con UPSERT sobre (id_proyecto, ruta_relativa): lenguaje ".js/.jsx/.ts/.tsx/.py", nombre_archivo, ruta_relativa con "/". Así los Resultado ya guardados no se pierden al re-escanear.

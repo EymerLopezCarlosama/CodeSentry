@@ -1,5 +1,5 @@
 -- CodeSentry · MySQL 8.0.16+ / MariaDB 10.2+
--- v7: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo + Resultados.regla + ChecklistItem.motivo
+-- v7: + UNIQUE en Estado · + ON DELETE CASCADE en SolicitudRevision.id_archivo + Resultado.regla + ChecklistItem.motivo
 -- Los datos semilla (Estado, Lenguaje) están en database/seeds/catalogos.sql
 CREATE DATABASE IF NOT EXISTS codesentry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE codesentry;

@@ -1,4 +1,4 @@
-// PROMPT — revisiones.validator.ts — Validación de entrada (zod) de revisiones (HU-05)
+// revisiones.validator.ts — Validación de entrada (zod) de revisiones (HU-05)
 //
 // crearRevisionSchema: { id_proyecto, tipo_objetivo: "carpeta"|"archivo", id_archivo? } con refine: id_archivo obligatorio si es "archivo" y prohibido si es "carpeta".
 //

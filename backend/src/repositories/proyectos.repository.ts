@@ -23,10 +23,6 @@ export interface DatosActualizarProyecto {
   lenguajes?: NombreLenguaje[];
 }
 
-function pendiente(funcion: string): never {
-  throw new Error(`proyectos.repository.${funcion}: pendiente de implementar`);
-}
-
 // HU01 (Jhon)
 interface FilaProyectoSimple extends RowDataPacket, Proyecto {}
 

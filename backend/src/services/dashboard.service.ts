@@ -1,4 +1,4 @@
-// PROMPT — dashboard.service.ts — Lógica de negocio de dashboard (HU-10)
+// dashboard.service.ts — Lógica de negocio de dashboard (HU-10)
 //
 // Armar la respuesta del contrato. Las claves sin datos van en 0 (por_severidad siempre trae baja/media/alta/critica; checklist siempre trae pendiente/aceptada/rechazada).
 //

@@ -1,4 +1,4 @@
-// PROMPT — resultados.controller.ts — Controlador de resultados (HU-07)
+// resultados.controller.ts — Controlador de resultados (HU-07)
 //
 // listar: 200 con { estado, archivos: [ { ruta_relativa, hallazgos: [...] } ] }.
 //

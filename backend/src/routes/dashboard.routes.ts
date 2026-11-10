@@ -1,4 +1,4 @@
-// PROMPT — dashboard.routes.ts — Rutas HTTP de dashboard (HU-10)
+// dashboard.routes.ts — Rutas HTTP de dashboard (HU-10)
 //
 // Router con GET /dashboard. Exportar el router.
 //

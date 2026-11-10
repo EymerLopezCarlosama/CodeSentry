@@ -7,10 +7,6 @@ import type { Archivo } from "../types";
 import { escanear } from "./scanner.service";
 import * as analyzerClient from "./analyzer-client.service";
 
-function pendiente(funcion: string): never {
-  throw new Error(`proyectos.service.${funcion}: pendiente de implementar`);
-}
-
 // Convierte lo que devuelve el repositorio a la forma del contrato (quita id_estado)
 function aRespuesta(p: ProyectoDetalle): ProyectoRespuesta {
   return {

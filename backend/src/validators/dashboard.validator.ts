@@ -1,4 +1,4 @@
-// PROMPT — dashboard.validator.ts — Validación de entrada (zod) de dashboard (HU-10)
+// dashboard.validator.ts — Validación de entrada (zod) de dashboard (HU-10)
 //
 // GET sin parámetros: exportar un esquema vacío por consistencia con los demás validadores.
 //

@@ -1,4 +1,4 @@
-// PROMPT — dashboard.repository.ts — Acceso a datos (SQL) de dashboard (HU-10)
+// dashboard.repository.ts — Acceso a datos (SQL) de dashboard (HU-10)
 //
 // COUNTs de proyectos/análisis/hallazgos, GROUP BY severidad, GROUP BY estado de checklist y el detalle por proyecto (cadena Proyecto → SolicitudRevision → Analisis → Resultado → ChecklistItem).
 //

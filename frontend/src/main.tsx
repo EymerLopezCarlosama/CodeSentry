@@ -1,4 +1,4 @@
-// PROMPT — main.tsx
+// main.tsx
 //
 // Punto de entrada: importar ./index.css y montar <RouterProvider router={router} /> en #root con createRoot.
 //
