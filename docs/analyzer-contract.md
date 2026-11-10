@@ -196,15 +196,17 @@ Consulta `GET /analisis/{job_id}` cada 2 s, actualiza `Analisis.id_estado`, y al
 
 ## Extensiones opcionales
 
-`POST /documentacion` (HU-11): recibe `{ "ruta_base", "ruta_relativa", "modelo" }` y devuelve `{ "contenido": "..." }`.
+`POST /documentacion` (HU-11): recibe `{ "ruta_base", "ruta_relativa", "modelo"? }` y devuelve
+`{ "contenido": "# archivo\n\n## Resumen ...", "aviso": null | "..." }`. El contenido es un documento Markdown con un resumen y los
+docstrings (Python) o JSDoc (JS y TS) propuestos para cada función o clase.
 
 `POST /pruebas` (HU-12): recibe `{ "ruta_base", "ruta_relativa", "modelo"? }` y devuelve
 `{ "framework": "jest" | "pytest", "contenido": "...", "aviso": null | "..." }`.
 
-Solo .js/.ts (Jest) y .py (PyTest). Archivos de más de 300 líneas se cortan y `aviso` lo indica.
+Los dos: solo lectura, solo .js/.ts/.py; archivos de más de 300 líneas se cortan y `aviso` lo indica. El prompt pide no inventar
+funciones ni modificar la lógica. Si la respuesta no tiene el formato esperado se reintenta una vez con un prompt más estricto.
 
-Errores (400): `RUTA_INEXISTENTE`, `ARCHIVO_INEXISTENTE`, `ARCHIVO_FUERA_DE_RUTA`, `LENGUAJE_NO_SOPORTADO`,
-`ARCHIVO_ILEGIBLE`, `ARCHIVO_VACIO`, `MODELO_NO_INSTALADO` · `503 OLLAMA_NO_DISPONIBLE` ·
-`504 OLLAMA_TIEMPO_EXCEDIDO` · `502 RESPUESTA_INVALIDA` (el modelo no devolvió pruebas tras 2 intentos).
-
-Tarda entre 20 y 70 s según el equipo: quien la llame necesita un timeout largo.
+Errores, con cuerpo `{ "codigo", "mensaje" }` (el mensaje habla de "pruebas" o de "documentación" según el endpoint):
+`400 RUTA_INEXISTENTE`, `400 ARCHIVO_INEXISTENTE`, `400 ARCHIVO_FUERA_DE_RUTA`, `400 LENGUAJE_NO_SOPORTADO`,
+`400 ARCHIVO_ILEGIBLE`, `400 ARCHIVO_VACIO`, `400 MODELO_NO_INSTALADO` · `503 OLLAMA_NO_DISPONIBLE` ·
+`504 OLLAMA_TIEMPO_EXCEDIDO` · `502 RESPUESTA_INVALIDA` (el modelo no devolvió un resultado válido tras 2 intentos).

@@ -2,8 +2,10 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.schemas.analisis import EntradaAnalisis, EntradaEscaneo, JobCreado, SalidaAnalisis, SalidaEscaneo
+from app.schemas.documentacion import EntradaDocumentacion, SalidaDocumentacion
 from app.schemas.pruebas import EntradaPruebas, SalidaPruebas
-from app.services import analyzer, escaner, modelos, ollama_client, test_generator, reglas
+from app.services import analyzer, doc_generator, escaner, modelos, ollama_client, reglas, test_generator
+from app.services.archivo_fuente import ArchivoError
 
 router = APIRouter()
 
@@ -47,15 +49,28 @@ def consultar_analisis(job_id: str) -> SalidaAnalisis:
 def escanear(entrada: EntradaEscaneo) -> SalidaEscaneo:
     return escaner.escanear_lenguajes(entrada.ruta_base)
 
+def _error_json(e: Exception) -> JSONResponse:
+    contenido = {"codigo": e.codigo}
+    if getattr(e, "mensaje", None):
+        contenido["mensaje"] = e.mensaje
+    return JSONResponse(status_code=e.status, content=contenido)
+
+
 @router.post("/pruebas", response_model=SalidaPruebas)
 def pruebas(entrada: EntradaPruebas):
     try:
         return test_generator.generar_pruebas(entrada)
-    except (test_generator.PruebasError, ollama_client.OllamaError) as e:
-        contenido = {"codigo": e.codigo}
-        if getattr(e, "mensaje", None):
-            contenido["mensaje"] = e.mensaje
-        return JSONResponse(status_code=e.status, content=contenido)
+    except (ArchivoError, ollama_client.OllamaError) as e:
+        return _error_json(e)
+
+
+@router.post("/documentacion", response_model=SalidaDocumentacion)
+def documentacion(entrada: EntradaDocumentacion):
+    try:
+        return doc_generator.generar_documentacion(entrada)
+    except (ArchivoError, ollama_client.OllamaError) as e:
+        return _error_json(e)
+
 
 @router.get("/reglas")
 def listar_reglas() -> list[dict]:

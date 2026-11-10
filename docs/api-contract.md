@@ -287,17 +287,19 @@ La petición queda abierta mientras el diálogo esté visible (máximo 5 minutos
 
 ## Extensiones opcionales
 
-| POST | `/archivos/:id/documentacion` | HU-11 → `{ "contenido": "..." }` |
-
+| Método | Ruta | Descripción |
 |---|---|---|
-
+| POST | `/archivos/:id/documentacion` | HU-11 → `{ "contenido": "# calc.py ...", "archivo_sugerido": "calc.docs.md", "aviso": null \| "..." }` |
 | POST | `/archivos/:id/pruebas` | HU-12 → `{ "framework": "jest" \| "pytest", "contenido": "...", "archivo_sugerido": "calc.test.js", "aviso": null \| "..." }` |
 
-Solo lectura: devuelve el texto de las pruebas y no escribe nada en el proyecto. Tarda entre 20 y 130 s según el equipo.
+Solo lectura: devuelven el texto y no escriben ni modifican nada en el proyecto. El frontend ofrece copiar o descargar.
+`contenido` de la documentación es un documento Markdown: `## Resumen` y `## Documentación propuesta` (docstrings de Python o JSDoc
+listos para pegar encima de cada función o clase). Tardan entre 20 y 130 s según el equipo.
 
-Errores: `404 ARCHIVO_NO_ENCONTRADO` · `404 ARCHIVO_INEXISTENTE` (ya no está en disco) · `400 ARCHIVO_VACIO` ·
-
-`502 OLLAMA_NO_DISPONIBLE` · `502 MODELO_NO_INSTALADO` · `502 RESPUESTA_INVALIDA` · `504 OLLAMA_TIEMPO_EXCEDIDO` · `504 ANALYZER_TIEMPO_EXCEDIDO`.
+Errores (los dos endpoints): `404 ARCHIVO_NO_ENCONTRADO` · `404 ARCHIVO_INEXISTENTE` (ya no está en disco) · `400 ARCHIVO_VACIO` ·
+`400 LENGUAJE_NO_SOPORTADO` · `502 OLLAMA_NO_DISPONIBLE` · `502 MODELO_NO_INSTALADO` · `502 RESPUESTA_INVALIDA` ·
+`504 OLLAMA_TIEMPO_EXCEDIDO` · `504 ANALYZER_TIEMPO_EXCEDIDO`. El `mensaje` de cada error lo redacta el analyzer según el endpoint
+(habla de "pruebas" o de "documentación").
 
 ---
 
