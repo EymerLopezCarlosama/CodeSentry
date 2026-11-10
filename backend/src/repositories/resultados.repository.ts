@@ -1,4 +1,4 @@
-// PROMPT — resultados.repository.ts — Acceso a datos (SQL) de resultados (HU-07)
+// resultados.repository.ts — Acceso a datos (SQL) de resultados (HU-07)
 //
 // Resultado JOIN Archivo JOIN ChecklistItem JOIN Estado filtrando por id_analisis y severidad opcional; ORDER BY FIELD(severidad,"critica","alta","media","baja").
 //

@@ -1,4 +1,4 @@
-// PROMPT — resultados.validator.ts — Validación de entrada (zod) de resultados (HU-07)
+// resultados.validator.ts — Validación de entrada (zod) de resultados (HU-07)
 //
 // params: id. query: severidad opcional ("baja"|"media"|"alta"|"critica").
 //

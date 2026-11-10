@@ -1,4 +1,4 @@
-// PROMPT — revisiones.controller.ts — Controlador de revisiones (HU-05)
+// revisiones.controller.ts — Controlador de revisiones (HU-05)
 //
 // crear: responde 202 con { id_solicitud, id_analisis, estado: "pendiente" }. No espera a que termine el análisis.
 //

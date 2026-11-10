@@ -1,4 +1,4 @@
-// PROMPT — revisiones.repository.ts — Acceso a datos (SQL) de revisiones (HU-05)
+// revisiones.repository.ts — Acceso a datos (SQL) de revisiones (HU-05)
 //
 // insertarSolicitud, insertarAnalisis (usar la misma conexión/transacción), obtenerSolicitud.
 //

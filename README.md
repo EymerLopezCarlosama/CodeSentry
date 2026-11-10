@@ -42,6 +42,17 @@ Get-Content database\seeds\demo.sql -Raw | docker exec -i codesentry-db mysql -u
 5. `cd analyzer && python -m venv .venv`, activar el entorno, `pip install -r requirements.txt` y `uvicorn app.main:app --port 8000 --reload`
 6. Ollama corriendo con un modelo descargado.
 
+## Base de datos ya creada: migraciones
+`docker-compose` solo ejecuta `schema.sql` cuando el volumen es nuevo. Si tu base ya existía, aplica a mano las migraciones de `database/migrations/` en orden:
+```powershell
+Get-Content database/migrations/001_resultado_regla.sql -Raw | docker exec -i codesentry-db mysql -uroot -proot codesentry
+Get-Content database/migrations/002_checklist_motivo.sql -Raw | docker exec -i codesentry-db mysql -uroot -proot codesentry
+```
+Si prefieres empezar de cero (borra los datos): `docker compose down -v && docker compose up -d`.
+
+## Scripts (Linux, macOS y Git Bash)
+`scripts/setup.sh` crea los `.env`, instala las dependencias y el entorno del analyzer. `scripts/dev.sh` levanta backend, analyzer y frontend juntos (Ctrl+C apaga los tres).
+
 ## Flujo de ramas
 `main` (estable) ← `feature/hu-XX-descripcion`
 Cada rama entra a `main` solo por Pull Request, revisado por otro compañero. No hay rama `develop`.

@@ -1,4 +1,4 @@
-// PROMPT — resultados.service.ts — Lógica de negocio de resultados (HU-07)
+// resultados.service.ts — Lógica de negocio de resultados (HU-07)
 //
 // Análisis inexistente → 404. Si el análisis NO está "completado": devolver { estado real, archivos: [] } (NO es un error).
 // Agrupar hallazgos por archivo y ordenarlos por severidad (critica → alta → media → baja). Cada hallazgo lleva estado_checklist.

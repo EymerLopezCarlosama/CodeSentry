@@ -1,4 +1,4 @@
-// PROMPT — dashboard.controller.ts — Controlador de dashboard (HU-10)
+// dashboard.controller.ts — Controlador de dashboard (HU-10)
 //
 // obtener: 200 con { totales, por_severidad, checklist, por_proyecto }.
 //
